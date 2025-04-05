@@ -1,3 +1,4 @@
+# Felipe Karmann, João Martinho 
 import numpy as np
 import nibabel as nib
 from scipy.ndimage import binary_erosion, generate_binary_structure

@@ -3,36 +3,51 @@
 import cv2
 import numpy as np
 
-def detectar_iris(caminho_imagem, caminho_saida):
-    imagem = cv2.imread(caminho_imagem)
-    if imagem is None:
-        print("Erro ao carregar a imagem :(")
+def processar_imagem(caminho_imagem):
+    imagem_original = cv2.imread(caminho_imagem)
+    if imagem_original is None:
+        print("Não foi possível carregar a imagem :(")
         return
-    
-    cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
-    cinza_desfocado = cv2.medianBlur(cinza, 5)
-    
-    circulos = cv2.HoughCircles(cinza_desfocado, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=50, param2=30, minRadius=30, maxRadius=100)
-    
+
+    imagem_cinza = cv2.cvtColor(imagem_original, cv2.COLOR_BGR2GRAY)
+    imagem_cinza = cv2.medianBlur(imagem_cinza, 9)
+    imagem_cinza = cv2.equalizeHist(imagem_cinza)
+
+    circulos = cv2.HoughCircles(
+        imagem_cinza,
+        cv2.HOUGH_GRADIENT,
+        dp=1,
+        minDist=50,
+        param1=100,
+        param2=40,
+        minRadius=30,
+        maxRadius=150
+    )
+
     if circulos is not None:
         circulos = np.uint16(np.around(circulos))
-        (x, y, raio) = circulos[0, 0]
+        melhor_circulo = circulos[0][0]
+        centro_x, centro_y, raio = melhor_circulo[0], melhor_circulo[1], melhor_circulo[2]
+
+        mascara_iris = np.zeros(imagem_original.shape[:2], dtype=np.uint8)
+        cv2.circle(mascara_iris, (centro_x, centro_y), raio, 255, -1)
+
+        mascara_pupila = np.zeros(imagem_original.shape[:2], dtype=np.uint8)
+        cv2.circle(mascara_pupila, (centro_x, centro_y), int(raio*0.35), 255, -1)
+
+        mascara_final = cv2.subtract(mascara_iris, mascara_pupila)
         
-        mascara = np.zeros_like(cinza)
-        cv2.circle(mascara, (x, y), raio, 255, -1)
-        
-        iris_isolada = cv2.bitwise_and(imagem, imagem, mask=mascara)
-        
-        y1, y2 = max(0, y-raio), min(imagem.shape[0], y+raio)
-        x1, x2 = max(0, x-raio), min(imagem.shape[1], x+raio)
-        iris_recortada = iris_isolada[y1:y2, x1:x2]
-        
-        cv2.imwrite(caminho_saida, iris_recortada)
-        print(f"Íris detectada e salva em {caminho_saida}")
+        iris_isolada = cv2.bitwise_and(imagem_original, imagem_original, mask=mascara_final)
+
+        fundo_branco = np.full_like(imagem_original, 255)
+        resultado = cv2.bitwise_or(fundo_branco, fundo_branco, mask=cv2.bitwise_not(mascara_final))
+        resultado = cv2.add(resultado, iris_isolada)
+
+        nome_saida = caminho_imagem.split('.')[0] + "_iris_isolada.png"
+        cv2.imwrite(nome_saida, resultado)
     else:
-        print("Nenhuma íris detectada na imagem :(")
+        print("Não foi possível detectar a íris na imagem :(")
 
 if __name__ == "__main__":
-    caminho_entrada = input("Digite o caminho para a imagem (a partir do direrório atual): ")
-    caminho_saida = caminho_entrada + "_iris_isolada.png"
-    detectar_iris(caminho_entrada, caminho_saida)
+    caminho = input("Digite o caminho da imagem: ")
+    processar_imagem(caminho)

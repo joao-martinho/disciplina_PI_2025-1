@@ -1,4 +1,4 @@
-# Relatório: Trabalho Prático 03 - Detecção de Objetos
+# Trabalho Prático 03 - Detecção de Objetos
 
 ## 1. Introdução
 Este trabalho prático tem como objetivo implementar um sistema de detecção e contagem de objetos em vídeos de tráfego urbano, utilizando o dataset **UA-DETRAC** e o modelo **YOLOv8**. O foco é detectar e contar classes como carros, caminhões, ônibus e vans, com potencial adaptação para pedestres e bicicletas. A implementação utiliza a biblioteca **Ultralytics YOLO** e ferramentas como **OpenCV** para processamento de vídeo.

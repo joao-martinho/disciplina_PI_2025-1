@@ -1,6 +1,6 @@
 # Resumos
 
-## Artigo 2: Alagamento do Rio Xopotó
+## Artigo 1: Alagamento do rio Xopotó
 
 O objetivo deste artigo é processar imagens obtidas por satélites para recolher características do terreno na bacia do Rio Xopotó, e, com elas, compreender as
 ocasiões de erosão e alagamento nessa região.
@@ -27,8 +27,13 @@ ocasiões de erosão e alagamento nessa região.
   - Escoamento superficial.
   - Baixa infiltração e maior chance de alagamento.
 
+### Conclusões
+
 A respeito da BHRX, ela não está particularmente sujeita a enchentes em épocas de
 cheia por causa do seu formato (mais alongada que circular); O formato retilíneo
 do rio favorece o arraste de sedimentos (pista falsa?). A capacidade de drenagem da bacia, no entanto, é alta, o que possibilita enchentes em épocas de vazão (?). A distribuição dos tipos de solo (maioria de pastagem) desfavorece a infiltração e favorece o alagamento. O solo exposto favorece a erosão, e, apesar de ser pequeno,
 é vizinho das áreas urbanas. Como resultado, as enchentes e desmoronamentos são um
 problema social grave.
+
+
+

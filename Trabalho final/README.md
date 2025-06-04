@@ -29,28 +29,19 @@ ocasiões de erosão e alagamento nessa região.
 
 ### Conclusões
 
-A respeito da BHRX, ela não está particularmente sujeita a enchentes em épocas de
-cheia por causa do seu formato (mais alongada que circular); O formato retilíneo
-do rio favorece o arraste de sedimentos (pista falsa?). A capacidade de drenagem da 
-bacia, no entanto, é alta, o que possibilita enchentes em épocas de vazão (?). A 
-distribuição dos tipos de solo (maioria de pastagem) desfavorece a infiltração e 
-favorece o alagamento. O solo exposto favorece a erosão, e, apesar de ser pequeno,
-é vizinho das áreas urbanas. Como resultado, as enchentes e desmoronamentos são um
-problema social grave.
+A respeito da BHRX, ela não está particularmente sujeita a enchentes em épocas de cheia por causa do seu formato (mais alongada que circular); O formato retilíneo do rio favorece o arraste de sedimentos (pista falsa?). A capacidade de drenagem da bacia, no entanto, é alta, o que possibilita enchentes em épocas de vazão (?). A distribuição dos tipos de solo (maioria de pastagem) desfavorece a infiltração e favorece o alagamento. O solo exposto favorece a erosão, e, apesar de ser pequeno, é vizinho das áreas urbanas. Como resultado, as enchentes e desmoronamentos são um problema social grave.
 
 ## Artigo 2: Fotointerpretação em rodovias
 
-O objetivo é usar técnicas de fotointerpretação (?) em imagens colhidas remotamente 
-para colher informações a respeito do solo em áreas de rodovia para ajudar a prever 
-onde são necessárias obras de engenharia para prevenção de desastres. Basicamente, o 
-artigo é parecido com o anterior, exceto por ter um foco maior na prevenção e e nas 
-rodovias, e não em uma região específica.
+O objetivo é usar técnicas de fotointerpretação (?) em imagens colhidas remotamente (usando drones) para colher informações a respeito do solo em áreas de rodovia para ajudar a prever onde são necessárias obras de engenharia para prevenção de desastres. Basicamente, o artigo é parecido com o anterior, exceto por ter um foco maior na prevenção e e nas rodovias, e não em uma região específica.
 
-# Primeiro caso: Minas Gerais
+### Primeiro caso: Minas Gerais
 
-A partir de uma voto aérea de uma estrada, observou-se uma "cicatriz" (trecho de solo 
-arenoso causado pela erosão) em um morrinho à beira da estrada. Depois, em outra foto, 
-tirada 10 meses depois... 
+A partir de uma voto aérea de uma estrada, observou-se uma "cicatriz" (trecho de solo arenoso causado pela erosão) em um morrinho à beira da estrada (imagem MG01). Depois, em outra foto, tirada 10 meses depois, a cicatriz tinha aumentado consideravelmente (imagem MG02). A partir disto, observou-se a necessidade de intervenção humana para prevenir desastres naturais (como desmoronamento?).
+
+### Segundo caso: Rio Grande do Sul
+
+A mesma coisa, mas em outra estrada (imagem RS01).
 
 
 

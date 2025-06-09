@@ -43,6 +43,30 @@ A partir de uma voto aérea de uma estrada, observou-se uma "cicatriz" (trecho d
 
 A mesma coisa, mas em outra estrada (imagem RS01).
 
+# TODO
 
+## Prompt:
 
+Eescreva um programa em Python que, a partir de uma foto tirada por satélite, reconheça padrões e características do terreno que estão mais propensas a desmoronamento. Aqui estão as regras de negócio:
 
+- **Área urbana (4,25%)**: 
+  - Pouca infiltração no solo devido ao uso de materiais artificiais como concreto, asfalto, calçadas, etc.
+  - O escoamento é apenas superficial.
+  - Muitas áreas possuem sistemas de esgoto ineficientes.
+  - Moradias em regiões de inundação frequente.
+
+- **Pastagem (72,37%)**: 
+  - Menor capacidade de infiltração.
+  - Maior chance de alagamento.
+
+- **Matas (17,08%)**: 
+  - Alta porosidade e grande capacidade de infiltração do solo.
+  - Baixa chance de alagamento.
+
+- **Solo exposto (5,70%)**: 
+  - Grande parte é de "mares de morros".
+  - Alta taxa de erosão.
+  - Escoamento superficial.
+  - Baixa infiltração e maior chance de alagamento.
+
+Baseando-se nisso, o programa recebe a imagem através de um caminho no sistema operacional, processa-a e gera a mesma imagem, porém processada. O processamento consiste em reconhecer os quatro tipos de terreno acima e colorir regiões das imagens (área urbana: azul; pastagem: amarelo; matas: verde; solo exposto: vermelho). A imgem gerada deve se chamar nome_da_imagem_original_processada.png.

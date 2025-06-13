@@ -140,7 +140,7 @@ class FloodAndLandslideProcessor:
         # Identifica quais alertas serão exibidos
         alerts = []
         if stats.get('enchente', {}).get('percentage', 0) > 3:
-            alerts.append("ALERTA: Areas de enchente detectadas!")
+            alerts.append("ALERTA: Areas de enchente detectadas")
         if stats.get('solo_exposto', {}).get('percentage', 0) > 8:
             alerts.append("ALERTA: Muito solo exposto risco de erosao")
 

@@ -13,28 +13,40 @@ class FloodAndLandslideProcessor:
     """
 
     def __init__(self):
-        # Configurações de cores e descrições para cada tipo de área
+        # Configurações unificadas de cores (BGR format)
         self.color_mappings = {
-            'matas': {'color': (0, 255, 0), 'description': 'Matas (Baixo risco)'},
-            'urbana': {'color': (255, 0, 0), 'description': 'Area Urbana (Medio risco)'},
-            'pastagem': {'color': (0, 255, 255), 'description': 'Pastagem (Alto risco)'},
-            'solo_exposto': {'color': (0, 0, 255), 'description': 'Solo Exposto (Alto risco)'},
-            'enchente': {'color': (128, 0, 128), 'description': 'Area Alagada (Enchente)'}
+            'matas': {
+                'color': (36, 120, 36),
+                'description': 'Matas (Baixo risco)',
+                'reference': np.array([36, 120, 36]),
+                'threshold': 60  # Ajustado para maior precisão
+            },
+            'urbana': {
+                'color': (200, 200, 200),
+                'description': 'Area Urbana (Medio risco)',
+                'reference': np.array([200, 200, 200]),
+                'threshold': 70
+            },
+            'pastagem': {
+                'color': (100, 255, 100),
+                'description': 'Pastagem (Alto risco)',
+                'reference': np.array([100, 255, 100]),
+                'threshold': 65
+            },
+            'solo_exposto': {
+                'color': (0, 140, 255),
+                'description': 'Solo Exposto (Alto risco)',
+                'reference': np.array([0, 140, 255]),
+                'threshold': 65
+            },
+            'enchente': {
+                'color': (139, 69, 19),
+                'description': 'Area Alagada (Enchente)',
+                'reference': np.array([139, 69, 19]),
+                'threshold': 75
+            }
         }
-
-        # Intervalos de cores no espaço HSV
-        self.color_ranges = {
-            'matas': {'lower': np.array([35, 80, 20]), 'upper': np.array([85, 255, 120])},
-            'urbana': {'lower': np.array([0, 0, 120]), 'upper': np.array([180, 60, 255])},
-            'solo_exposto': {'lower': np.array([8, 40, 80]), 'upper': np.array([25, 180, 220])},
-            'pastagem': {'lower': np.array([35, 20, 80]), 'upper': np.array([85, 120, 180])},
-            'enchente': {'lower': np.array([0, 30, 0]), 'upper': np.array([30, 255, 80])}
-        }
-
-        # Intervalos adicionais para água (azul)
-        self.water_blue_range = {'lower': np.array([80, 40, 20]), 'upper': np.array([140, 255, 220])}
-
-        self.alpha = 0.4  # Transparência das áreas destacadas
+        self.alpha = 0.4
 
     def load_image(self, image_path):
         """Carrega a imagem e verifica se é válida"""
@@ -48,63 +60,59 @@ class FloodAndLandslideProcessor:
         print(f"Imagem carregada: {image.shape[1]}x{image.shape[0]} pixels")
         return image
 
-    def enhance_water_detection(self, hsv_image):
-        """Melhora a detecção de água aplicando múltiplas técnicas"""
-        # Canal Value (V) do HSV - detecta pixels muito escuros
-        v_channel = hsv_image[:, :, 2]
-        _, black_mask = cv2.threshold(v_channel, 40, 255, cv2.THRESH_BINARY_INV)
+    def color_distance(self, pixel, reference_color):
+        """Calcula a distância euclidiana entre cores usando vetorização"""
+        return np.sqrt(np.sum((pixel.astype(np.float32) - reference_color.astype(np.float32)) ** 2))
+        
 
-        # Máscara para tons de azul (água)
-        blue_mask = cv2.inRange(hsv_image, self.water_blue_range['lower'], self.water_blue_range['upper'])
-
-        # Máscara para tons de marrom (água/lama)
-        brown_mask = cv2.inRange(hsv_image, self.color_ranges['enchente']['lower'],
-                                 self.color_ranges['enchente']['upper'])
-
-        # Combina todas as máscaras de água
-        combined_water_mask = cv2.bitwise_or(black_mask, blue_mask)
-        combined_water_mask = cv2.bitwise_or(combined_water_mask, brown_mask)
-
-        # Operações morfológicas para limpar a máscara
-        kernel = np.ones((3, 3), np.uint8)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_CLOSE, kernel)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_OPEN, kernel)
-
-        # Remove ruídos pequenos
-        kernel_big = np.ones((5, 5), np.uint8)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_OPEN, kernel_big)
-
-        return combined_water_mask
-
-    def create_masks(self, hsv_image):
-        """Cria máscaras binárias para todos os tipos de áreas definidas"""
+    def create_masks(self, image):
+        """Cria máscaras usando subtração de cores vetorizada"""
+        height, width = image.shape[:2]
+        
+        # Converte imagem para float32 para maior precisão
+        img_float = image.astype(np.float32)
+        
+        # Reshape a imagem para processar todos os pixels de uma vez
+        pixels = img_float.reshape(-1, 3)
+        
+        # Prepara array para armazenar todas as distâncias de cores
+        distances = np.zeros((len(self.color_mappings), pixels.shape[0]), dtype=np.float32)
+        
+        # Calcula distâncias para todas as cores de referência de uma vez
+        for idx, (terrain, config) in enumerate(self.color_mappings.items()):
+            ref_color = config['reference'].astype(np.float32)
+            
+            # Calcula distância euclidiana vetorizada
+            diff = pixels - ref_color
+            distances[idx] = np.sqrt(np.sum(diff * diff, axis=1))
+        
+        # Normaliza as distâncias
+        max_dist = np.max(distances)
+        distances = distances / max_dist if max_dist > 0 else distances
+        
+        # Encontra a classe mais próxima para cada pixel
+        best_matches = np.argmin(distances, axis=0)
+        
+        # Cria máscaras para cada classe
         masks = {}
-
-        # Cria máscaras para todos os tipos de terreno
-        for terrain_type in self.color_ranges:
-            lower = self.color_ranges[terrain_type]['lower']
-            upper = self.color_ranges[terrain_type]['upper']
-            masks[terrain_type] = cv2.inRange(hsv_image, lower, upper)
-
-        # Aplica detecção aprimorada de água
-        enhanced_water = self.enhance_water_detection(hsv_image)
-        masks['enchente'] = cv2.bitwise_or(masks['enchente'], enhanced_water)
-
-        # Filtro de ruído
-        kernel = np.ones((2, 2), np.uint8)
-        for terrain_type in masks:
-            masks[terrain_type] = cv2.morphologyEx(masks[terrain_type], cv2.MORPH_CLOSE, kernel)
-
-        # Prioridade: enchente > matas > urbana > solo_exposto > pastagem
-        priority_order = ['enchente', 'matas', 'urbana', 'solo_exposto', 'pastagem']
-
-        for i, terrain_type in enumerate(priority_order):
-            if terrain_type in masks:
-                for higher_priority in priority_order[:i]:
-                    if higher_priority in masks:
-                        masks[terrain_type] = cv2.bitwise_and(masks[terrain_type],
-                                                          cv2.bitwise_not(masks[higher_priority]))
-
+        for idx, (terrain, config) in enumerate(self.color_mappings.items()):
+            # Cria máscara binária
+            mask = (best_matches == idx).reshape(height, width).astype(np.uint8) * 255
+            
+            # Aplica threshold baseado na distância
+            dist_mask = distances[idx].reshape(height, width)
+            threshold_mask = (dist_mask < (config['threshold'] / 255.0)).astype(np.uint8) * 255
+            
+            # Combina as máscaras
+            final_mask = cv2.bitwise_and(mask, threshold_mask)
+            
+            # Limpa ruído
+            kernel = np.ones((3,3), np.uint8)
+            final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel)
+            final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_CLOSE, kernel)
+            
+            masks[terrain] = final_mask
+        
         return masks
 
     def calculate_risk_areas(self, masks, image_size):
@@ -135,11 +143,9 @@ class FloodAndLandslideProcessor:
         for terrain_type, mask in masks.items():
             if cv2.countNonZero(mask) > 0:
                 color = np.array(self.color_mappings[terrain_type]['color'], dtype=np.float32)
-
-                for i in range(3):
-                    processed_image[mask > 0, i] = (
-                            self.alpha * color[i] + (1 - self.alpha) * processed_image[mask > 0, i]
-                    )
+                mask_3d = np.stack([mask] * 3, axis=2) / 255.0
+                overlay = color.reshape(1, 1, 3) * mask_3d
+                processed_image = processed_image * (1 - self.alpha * mask_3d) + overlay * self.alpha
 
         return processed_image.astype(np.uint8)
 
@@ -210,65 +216,74 @@ class FloodAndLandslideProcessor:
                 alert_y += 30
 
     def save_image(self, image, original_path):
-        """Salva a imagem processada com timestamp no nome"""
+        """Salva a imagem processada em alta qualidade"""
         try:
             filename, ext = os.path.splitext(original_path)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = f"{filename}_processada_{timestamp}.png"
-
-            success = cv2.imwrite(output_path, image)
+            
+            # Salva com máxima qualidade
+            success = cv2.imwrite(output_path, image, [
+                cv2.IMWRITE_PNG_COMPRESSION, 0,  # Sem compressão PNG
+                cv2.IMWRITE_JPEG_QUALITY, 100    # Máxima qualidade JPEG
+            ])
+            
             if not success:
                 raise ValueError("Falha ao salvar a imagem")
-
+            
             return output_path
         except Exception as e:
             print(f"Erro ao salvar imagem: {e}")
             fallback_path = f"processada_{timestamp}.png"
-            cv2.imwrite(fallback_path, image)
+            cv2.imwrite(fallback_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 0])
             return fallback_path
 
     def process_image(self, image_path):
-        """Processa uma imagem completa, executando todas as etapas"""
-        print(f"\nProcessando: {os.path.basename(image_path)}")
-
+        """Processa uma imagem mantendo alta resolução"""
         try:
-            # 1. Carrega a imagem
+            # Carrega a imagem em alta resolução
             image = self.load_image(image_path)
             print("✔ Imagem carregada")
-
-            # 2. Redimensiona se muito grande
-            height, width = image.shape[:2]
-            if width > 2000 or height > 2000:
-                scale = min(2000 / width, 2000 / height)
-                new_width = int(width * scale)
-                new_height = int(height * scale)
-                image = cv2.resize(image, (new_width, new_height))
-                print(f"✔ Imagem redimensionada para {new_width}x{new_height}")
-
-            # 3. Converte para HSV e aplica filtro
-            image_filtered = cv2.bilateralFilter(image, 9, 75, 75)
-            hsv = cv2.cvtColor(image_filtered, cv2.COLOR_BGR2HSV)
-            print("✔ Conversão HSV concluída")
-
-            # 4. Cria máscaras
-            masks = self.create_masks(hsv)
+            
+            # Cria cópia para processamento
+            processing_image = image.copy()
+            
+            # Melhoria na qualidade sem perda de resolução
+            processing_image = cv2.bilateralFilter(processing_image, 9, 75, 75)
+            
+            # Ajuste de cor e contraste preservando detalhes
+            lab = cv2.cvtColor(processing_image, cv2.COLOR_BGR2LAB)
+            l, a, b = cv2.split(lab)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            l = clahe.apply(l)
+            lab = cv2.merge((l,a,b))
+            processing_image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+            
+            # Processamento mantendo resolução original
+            masks = self.create_masks(processing_image)
             print("✔ Máscaras criadas")
-
-            # 5. Calcula estatísticas
+            
+            # Debug masks em alta resolução
+            debug_dir = os.path.join(os.path.dirname(image_path), "debug_masks")
+            os.makedirs(debug_dir, exist_ok=True)
+            
+            for terrain, mask in masks.items():
+                debug_path = os.path.join(debug_dir, f"mask_{terrain}.png")
+                cv2.imwrite(debug_path, mask, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+            
+            # Calcula estatísticas usando máscara em resolução total
             stats = self.calculate_risk_areas(masks, image.shape[:2])
-
-            # 6. Aplica máscaras
+            
+            # Aplica máscaras na imagem original
             processed_image = self.apply_masks(image, masks)
-            print("✔ Máscaras aplicadas")
-
-            # 7. Adiciona legenda
+            
+            # Adiciona legenda mantendo qualidade
             self.add_legend_and_stats(processed_image, stats)
-            print("✔ Legenda e estatísticas adicionadas")
-
-            # 8. Salva a imagem
+            
+            # Salva em alta qualidade
             output_path = self.save_image(processed_image, image_path)
-            print(f"✔ Imagem salva em: {output_path}")
-
+            print(f"✔ Imagem salva em alta resolução: {output_path}")
+            
             return output_path, stats
 
         except Exception as e:

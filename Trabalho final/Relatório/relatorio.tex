@@ -1,7 +1,7 @@
 \documentclass{article}
 \author{Felipe Karmann, João Souza}
 \date{30 de maio de 2025}
-\title{Trabalho final: relatório}
+\title{Modelagem e Análise de Riscos Ambientais em Blumenau por Meio de Imagens de Satélite}
 
 \begin{document}
 
@@ -9,22 +9,96 @@
 
 \section{Descrição do problema}
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, com as informações colhidas no estudo de Lacerda, Fonseca e Faria (2017), calcule as probabiliades de alagamento na região retratada.
+A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato devido à sua geografia montanhosa, rios urbanos e padrões de chuva intensos. A gestão de riscos naturais requer ferramentas que combinem automação, visão computacional e análise de dados geográficos para monitorar o uso do solo e identificar áreas críticas.
+
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, com as informações colhidas no estudo de Lacerda, Fonseca e Faria (2017), calcule as probabiliades de alagamento na região retratada. O algoritmo tem por objetivo ajudar órgãos públicos, como a Defesa Civil, na tomada de decisão rápida e baseada em evidência visual.
 
 \section{Montagem da base}
+\subsection{Fonte de dados}
 
 A base de imagens foi criada com fotos de satélite da região de Blumenau, com foco naquelas com histórico significativo de alagamento.
 
+\subsection{Estrutura da base}
+
+As imagens foram rotuladas com base em coloração e características visuais, utilizando segmentação por cor em espaço HSV em vez de máscaras manuais.
+
 \section{Preparação}
+
+O programa usa subtração de cores para encontrar em cada imagem seções que correspondam aos quatro tipos de solo (área urbana, solo exposto, pastagem e matas), e as áreas alagadas, se houver.
+
+Cada imagem passa pelas seguintes etapas:
+\begin{itemize}
+    \item conversão para HSV: o modelo trabalha no espaço HSV (Hue, Saturation, Value), mais robusto à variação de iluminação;
+    \item redução de ruído com filtro bilateral;
+    \item criação de máscaras binárias para classes de terreno (matas, urbana, solo exposto, pastagem e enchente).
+\end{itemize}
+
+A função \texttt{enhance\_water\_detection()} melhora a identificação de áreas alagadas, mesmo sob sombra ou baixa visibilidade.
 
 \section{Modelo da rede}
 
+Embora não se trate de uma rede neural convencional, este algoritmo pode ser interpretado como uma rede de regras heurísticas e de segmentação que classifica pixels da imagem com base em cores HSV.
+
 \section{Treinamento}
+
+Este algoritmo não requer treinamento supervisionado pois não utiliza redes neurais; ele opera por regras fixas. No entanto, as faixas HSV foram calibradas manualmente com base em amostras de imagens reais de Blumenau.
 
 \section{Classificação e testes}
 
+Durante a classificação, o algoritmo atribui categorias de risco às áreas da imagem com base na predominância de cada tipo:
+\begin{itemize}
+    \item solo exposto ou pastagem $>$ 8\% $\rightarrow$ risco de erosão ou deslizamento;
+    \item enchente $>$ 3\% $\rightarrow$ risco de alagamento urbano ou rural.
+\end{itemize}
+
+Exemplo de estatísticas geradas:
+
+\begin{verbatim}
+
+  Estatísticas da imagem:
+- Matas (Baixo risco): 38.45%
+- Área Urbana (Médio risco): 23.12%
+- Pastagem (Alto risco): 14.80%
+- Solo Exposto (Alto risco): 12.55%
+- Área Alagada (Enchente): 4.10%
+
+  ALERTA: Areas de enchente detectadas
+  ALERTA: Muito solo exposto risco de erosão
+
+\end{verbatim}
+
 \section{Código}
 
+O programa está dividido em funções-chave:
+
+\begin{itemize}
+\item \texttt{load\_image(path)}: carrega e valida a imagem de entrada;
+
+\item \texttt{create\_masks(hsv)}: gera máscaras binárias para cada classe de risco com base em faixas de cor HSV;
+
+\item \texttt{enhance\_water\_detection(hsv)}: aprimora a detecção de água utilizando múltiplas técnicas (tons de azul, marrom e sombras);
+
+\item \texttt{apply\_masks(image, masks)}: aplica as máscaras sobre a imagem com cores indicativas e transparência;
+
+\item \texttt{calculate\_risk\_areas()}: calcula a porcentagem de cada classe na imagem;
+
+\item \texttt{add\_legend\_and\_stats()}: gera legenda visual e insere alertas diretamente na imagem final;
+
+\item \texttt{process\_image(image\_path)}: integra todas as etapas para processar uma imagem completa.
+\end{itemize}
+
 \section{Resultados}
+\subsection{Demonstração de entradas e saídas}
+
+Entrada: imagem de satélite da cidade de Blumenau após período de chuvas:
+
+Saída: imagem processada com destaque visual das áreas e legendas:
+
+\begin{itemize}
+    \item verde escuro $\rightarrow$ matas;
+    \item vermelho $\rightarrow$ solo exposto;
+    \item azul $\rightarrow$ áreas urbanas;
+    \item roxo ou preto $\rightarrow$ enchente.
+\end{itemize}
 
 \end{document}

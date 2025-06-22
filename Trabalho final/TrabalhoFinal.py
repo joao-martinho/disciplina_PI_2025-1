@@ -1,244 +1,202 @@
-# Importações necessárias
 import os
 import sys
 from datetime import datetime
 import cv2
 import numpy as np
 
-class LandslideProcessor:
-    """
-    Classe para processamento de imagens de satélite para identificação de:
-    - Áreas propensas a desmoronamento
-    """
-
+class ProcessadorRiscoTerreno:
     def __init__(self):
-        # Configurações de cores e descrições para cada tipo de área
-        self.color_mappings = {
-            'matas': {'color': (0, 255, 0), 'description': 'Matas (Baixo risco)'},
-            'urbana': {'color': (255, 0, 0), 'description': 'Area Urbana (Medio risco)'},
-            'pastagem': {'color': (0, 255, 255), 'description': 'Pastagem (Alto risco)'},
-            'solo_exposto': {'color': (0, 0, 255), 'description': 'Solo Exposto (Alto risco)'}
+        self.mapeamento_cores = {
+            'matas': {'cor': (0, 255, 0), 'descricao': 'Matas (Baixo risco)'},
+            'urbana': {'cor': (255, 0, 0), 'descricao': 'Area Urbana (Medio risco)'},
+            'pastagem': {'cor': (0, 255, 255), 'descricao': 'Pastagem (Alto risco)'},
+            'solo_exposto': {'cor': (0, 0, 255), 'descricao': 'Solo Exposto (Alto risco)'}
         }
 
-        # Intervalos de cores no espaço HSV
-        self.color_ranges = {
-            'matas': {'lower': np.array([35, 80, 20]), 'upper': np.array([85, 255, 120])},
-            'urbana': {'lower': np.array([0, 0, 120]), 'upper': np.array([180, 60, 255])},
-            'solo_exposto': {'lower': np.array([8, 40, 80]), 'upper': np.array([25, 180, 220])},
-            'pastagem': {'lower': np.array([35, 20, 80]), 'upper': np.array([85, 120, 180])}
+        self.faixas_cores = {
+            'matas': {'minimo': np.array([35, 80, 20]), 'maximo': np.array([85, 255, 120])},
+            'urbana': {'minimo': np.array([0, 0, 120]), 'maximo': np.array([180, 60, 255])},
+            'solo_exposto': {'minimo': np.array([8, 40, 80]), 'maximo': np.array([25, 180, 220])},
+            'pastagem': {'minimo': np.array([35, 20, 80]), 'maximo': np.array([85, 120, 180])}
         }
 
-        self.alpha = 0.4  # Transparência das áreas destacadas
+        self.transparencia = 0.4
 
-    def load_image(self, image_path):
-        """Carrega a imagem e verifica se é válida"""
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Arquivo não encontrado: {image_path}")
+    def calcular_risco_enchentes(self, estatisticas):
+        percentual_urbano = estatisticas.get('urbana', {}).get('porcentagem', 0)
+        percentual_solo = estatisticas.get('solo_exposto', {}).get('porcentagem', 0)
+        percentual_matas = estatisticas.get('matas', {}).get('porcentagem', 0)
+        percentual_pastagem = estatisticas.get('pastagem', {}).get('porcentagem', 0)
 
-        image = cv2.imread(image_path)
-        if image is None:
-            raise ValueError(f"Não foi possível ler a imagem: {image_path}")
+        pontuacao = (percentual_urbano * 0.7) + (percentual_solo * 0.9) + (percentual_pastagem * 0.4) - (percentual_matas * 0.6)
+        pontuacao = max(0, min(100, pontuacao))
 
-        print(f"Imagem carregada: {image.shape[1]}x{image.shape[0]} pixels")
-        return image
+        if pontuacao > 70:
+            return "Alta probabilidade de enchentes"
+        elif pontuacao > 40:
+            return "Média probabilidade de enchentes"
+        elif pontuacao > 15:
+            return "Baixa probabilidade de enchentes"
+        else:
+            return "Muito baixa probabilidade de enchentes"
 
-    def create_masks(self, hsv_image):
-        """Cria máscaras binárias para todos os tipos de áreas definidas"""
-        masks = {}
+    def gerar_relatorio_texto(self, estatisticas, nome_imagem, dimensoes):
+        risco_enchentes = self.calcular_risco_enchentes(estatisticas)
+        alertas = []
 
-        # Cria máscaras para todos os tipos de terreno
-        for terrain_type in self.color_ranges:
-            lower = self.color_ranges[terrain_type]['lower']
-            upper = self.color_ranges[terrain_type]['upper']
-            masks[terrain_type] = cv2.inRange(hsv_image, lower, upper)
+        if estatisticas.get('solo_exposto', {}).get('porcentagem', 0) > 8:
+            alertas.append("⚠ Solo exposto acima do limite seguro (8%)")
 
-        # Filtro de ruído
+        relatorio = f"""
+{'='*60}
+RELATÓRIO DE ANÁLISE - {nome_imagem}
+{'='*60}
+Dimensões: {dimensoes[1]}x{dimensoes[0]} pixels
+
+ÁREAS DETECTADAS:"""
+
+        for area in ['matas', 'urbana', 'pastagem', 'solo_exposto']:
+            dados = estatisticas.get(area, {})
+            relatorio += f"\n- {self.mapeamento_cores[area]['descricao']}: {dados.get('porcentagem', 0):.2f}%"
+
+        relatorio += "\n\nALERTAS:"
+        if alertas:
+            for alerta in alertas:
+                relatorio += f"\n{alerta}"
+        else:
+            relatorio += "\nNenhum alerta crítico detectado"
+
+        relatorio += f"\n\nRISCO DE ENCHENTES: {risco_enchentes}"
+        relatorio += f"\n{'='*60}\n"
+
+        return relatorio
+
+    def carregar_imagem(self, caminho):
+        if not os.path.exists(caminho):
+            raise FileNotFoundError(f"Arquivo não encontrado: {caminho}")
+
+        imagem = cv2.imread(caminho)
+        if imagem is None:
+            raise ValueError(f"Não foi possível ler a imagem: {caminho}")
+
+        print(f"Imagem carregada: {imagem.shape[1]}x{imagem.shape[0]} pixels")
+        return imagem
+
+    def criar_mascaras(self, imagem_hsv):
+        mascaras = {}
+
+        for tipo_terreno in self.faixas_cores:
+            minimo = self.faixas_cores[tipo_terreno]['minimo']
+            maximo = self.faixas_cores[tipo_terreno]['maximo']
+            mascaras[tipo_terreno] = cv2.inRange(imagem_hsv, minimo, maximo)
+
         kernel = np.ones((2, 2), np.uint8)
-        for terrain_type in masks:
-            masks[terrain_type] = cv2.morphologyEx(masks[terrain_type], cv2.MORPH_CLOSE, kernel)
+        for tipo_terreno in mascaras:
+            mascaras[tipo_terreno] = cv2.morphologyEx(mascaras[tipo_terreno], cv2.MORPH_CLOSE, kernel)
 
-        # Prioridade: matas > urbana > solo_exposto > pastagem
-        priority_order = ['matas', 'urbana', 'solo_exposto', 'pastagem']
+        ordem_prioridade = ['matas', 'urbana', 'solo_exposto', 'pastagem']
 
-        for i, terrain_type in enumerate(priority_order):
-            if terrain_type in masks:
-                for higher_priority in priority_order[:i]:
-                    if higher_priority in masks:
-                        masks[terrain_type] = cv2.bitwise_and(masks[terrain_type],
-                                                          cv2.bitwise_not(masks[higher_priority]))
+        for i, tipo_terreno in enumerate(ordem_prioridade):
+            if tipo_terreno in mascaras:
+                for maior_prioridade in ordem_prioridade[:i]:
+                    if maior_prioridade in mascaras:
+                        mascaras[tipo_terreno] = cv2.bitwise_and(mascaras[tipo_terreno],
+                                                          cv2.bitwise_not(mascaras[maior_prioridade]))
 
-        return masks
+        return mascaras
 
-    def calculate_risk_areas(self, masks, image_size):
-        """Calcula a porcentagem de cada tipo de área na imagem"""
-        stats = {}
-        total_pixels = image_size[0] * image_size[1]
+    def calcular_areas_risco(self, mascaras, dimensoes):
+        estatisticas = {}
+        total_pixels = dimensoes[0] * dimensoes[1]
 
-        # Garante que todos os tipos de terreno estejam nas estatísticas
-        all_terrain_types = ['matas', 'urbana', 'pastagem', 'solo_exposto']
+        tipos_terreno = ['matas', 'urbana', 'pastagem', 'solo_exposto']
 
-        for terrain_type in all_terrain_types:
-            if terrain_type in masks:
-                area_pixels = cv2.countNonZero(masks[terrain_type])
+        for tipo_terreno in tipos_terreno:
+            if tipo_terreno in mascaras:
+                pixels_area = cv2.countNonZero(mascaras[tipo_terreno])
             else:
-                area_pixels = 0
+                pixels_area = 0
 
-            stats[terrain_type] = {
-                'pixels': area_pixels,
-                'percentage': (area_pixels / total_pixels) * 100
+            estatisticas[tipo_terreno] = {
+                'pixels': pixels_area,
+                'porcentagem': (pixels_area / total_pixels) * 100
             }
 
-        return stats
+        return estatisticas
 
-    def apply_masks(self, image, masks):
-        """Aplica as máscaras na imagem original com transparência"""
-        processed_image = image.copy().astype(np.float32)
+    def aplicar_mascaras(self, imagem, mascaras):
+        imagem_processada = imagem.copy().astype(np.float32)
 
-        for terrain_type, mask in masks.items():
-            if cv2.countNonZero(mask) > 0:
-                color = np.array(self.color_mappings[terrain_type]['color'], dtype=np.float32)
+        for tipo_terreno, mascara in mascaras.items():
+            if cv2.countNonZero(mascara) > 0:
+                cor = np.array(self.mapeamento_cores[tipo_terreno]['cor'], dtype=np.float32)
 
                 for i in range(3):
-                    processed_image[mask > 0, i] = (
-                            self.alpha * color[i] + (1 - self.alpha) * processed_image[mask > 0, i]
+                    imagem_processada[mascara > 0, i] = (
+                            self.transparencia * cor[i] + (1 - self.transparencia) * imagem_processada[mascara > 0, i]
                     )
 
-        return processed_image.astype(np.uint8)
+        return imagem_processada.astype(np.uint8)
 
-    def add_legend_and_stats(self, image, stats):
-        """Adiciona legenda e estatísticas à imagem processada"""
-        height, width = image.shape[:2]
-
-        # Identifica alertas
-        alerts = []
-        if stats.get('solo_exposto', {}).get('percentage', 0) > 8:
-            alerts.append("ALERTA: Muito solo exposto risco de erosao")
-
-        # Calcula dimensões da legenda
-        items_count = 4  # Total fixo de itens na legenda
-        base_legend_height = 50 + (items_count * 25)  # 50 para título e margens + 25 por item
-        alert_height = len(alerts) * 30  # 30 pixels por alerta
-        total_height = base_legend_height + alert_height
-        legend_width = 450
-
-        # Ajusta para imagens pequenas
-        if height < total_height + 20:
-            scale_factor = (height - 20) / total_height
-            base_legend_height = int(base_legend_height * scale_factor)
-            alert_height = int(alert_height * scale_factor)
-            total_height = base_legend_height + alert_height
-
-        if width < legend_width + 20:
-            legend_width = width - 20
-
-        # Cria retângulo de fundo único para legenda e alertas
-        cv2.rectangle(image, (10, height - total_height - 10),
-                      (legend_width, height - 10), (255, 255, 255), -1)
-        cv2.rectangle(image, (10, height - total_height - 10),
-                      (legend_width, height - 10), (0, 0, 0), 2)
-
-        # Adiciona título
-        cv2.putText(image, "ANALISE DE RISCO",
-                    (20, height - total_height + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-
-        # Adiciona itens da legenda (todos os 4 tipos)
-        y_offset = height - total_height + 55
-        legend_order = ['matas', 'urbana', 'pastagem', 'solo_exposto']
-
-        for terrain_type in legend_order:
-            color = self.color_mappings[terrain_type]['color']
-            desc = self.color_mappings[terrain_type]['description']
-            percentage = stats.get(terrain_type, {}).get('percentage', 0)
-
-            # Adiciona quadrado colorido
-            cv2.rectangle(image, (20, y_offset - 10), (40, y_offset + 5), color, -1)
-            cv2.rectangle(image, (20, y_offset - 10), (40, y_offset + 5), (0, 0, 0), 1)
-
-            # Adiciona texto
-            stats_text = f"{desc}: {percentage:.2f}%"
-            cv2.putText(image, stats_text, (50, y_offset),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-
-            y_offset += 25
-
-        # Adiciona alertas abaixo da legenda
-        if alerts:
-            alert_y = height - total_height + base_legend_height + 10
-            for alert in alerts:
-                cv2.putText(image, alert,
-                            (20, alert_y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                alert_y += 30
-
-    def save_image(self, image, original_path):
-        """Salva a imagem processada com timestamp no nome"""
+    def salvar_imagem(self, imagem, caminho_original):
         try:
-            filename, ext = os.path.splitext(original_path)
+            nome_arquivo, ext = os.path.splitext(caminho_original)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = f"{filename}_processada_{timestamp}.png"
+            caminho_saida = f"{nome_arquivo}_processada_{timestamp}.png"
 
-            success = cv2.imwrite(output_path, image)
-            if not success:
+            sucesso = cv2.imwrite(caminho_saida, imagem)
+            if not sucesso:
                 raise ValueError("Falha ao salvar a imagem")
 
-            return output_path
+            return caminho_saida
         except Exception as e:
             print(f"Erro ao salvar imagem: {e}")
-            fallback_path = f"processada_{timestamp}.png"
-            cv2.imwrite(fallback_path, image)
-            return fallback_path
+            caminho_reserva = f"processada_{timestamp}.png"
+            cv2.imwrite(caminho_reserva, imagem)
+            return caminho_reserva
 
-    def process_image(self, image_path):
-        """Processa uma imagem completa, executando todas as etapas"""
-        print(f"\nProcessando: {os.path.basename(image_path)}")
+    def processar_imagem(self, caminho_imagem):
+        print(f"\nProcessando: {os.path.basename(caminho_imagem)}")
 
         try:
-            # 1. Carrega a imagem
-            image = self.load_image(image_path)
+            imagem = self.carregar_imagem(caminho_imagem)
             print("✔ Imagem carregada")
 
-            # 2. Redimensiona se muito grande
-            height, width = image.shape[:2]
-            if width > 2000 or height > 2000:
-                scale = min(2000 / width, 2000 / height)
-                new_width = int(width * scale)
-                new_height = int(height * scale)
-                image = cv2.resize(image, (new_width, new_height))
-                print(f"✔ Imagem redimensionada para {new_width}x{new_height}")
+            altura, largura = imagem.shape[:2]
+            if largura > 2000 or altura > 2000:
+                escala = min(2000 / largura, 2000 / altura)
+                nova_largura = int(largura * escala)
+                nova_altura = int(altura * escala)
+                imagem = cv2.resize(imagem, (nova_largura, nova_altura))
+                print(f"✔ Imagem redimensionada para {nova_largura}x{nova_altura}")
 
-            # 3. Converte para HSV e aplica filtro
-            image_filtered = cv2.bilateralFilter(image, 9, 75, 75)
-            hsv = cv2.cvtColor(image_filtered, cv2.COLOR_BGR2HSV)
+            imagem_filtrada = cv2.bilateralFilter(imagem, 9, 75, 75)
+            hsv = cv2.cvtColor(imagem_filtrada, cv2.COLOR_BGR2HSV)
             print("✔ Conversão HSV concluída")
 
-            # 4. Cria máscaras
-            masks = self.create_masks(hsv)
+            mascaras = self.criar_mascaras(hsv)
             print("✔ Máscaras criadas")
 
-            # 5. Calcula estatísticas
-            stats = self.calculate_risk_areas(masks, image.shape[:2])
+            estatisticas = self.calcular_areas_risco(mascaras, imagem.shape[:2])
 
-            # 6. Aplica máscaras
-            processed_image = self.apply_masks(image, masks)
+            imagem_processada = self.aplicar_mascaras(imagem, mascaras)
             print("✔ Máscaras aplicadas")
 
-            # 7. Adiciona legenda
-            self.add_legend_and_stats(processed_image, stats)
-            print("✔ Legenda e estatísticas adicionadas")
+            relatorio = self.gerar_relatorio_texto(estatisticas, os.path.basename(caminho_imagem), imagem.shape[:2])
+            print(relatorio)
 
-            # 8. Salva a imagem
-            output_path = self.save_image(processed_image, image_path)
-            print(f"✔ Imagem salva em: {output_path}")
+            caminho_saida = self.salvar_imagem(imagem_processada, caminho_imagem)
+            print(f"✔ Imagem salva em: {caminho_saida}")
 
-            return output_path, stats
+            return caminho_saida, estatisticas
 
         except Exception as e:
             print(f"✖ Erro: {str(e)}")
             raise
 
-def get_user_input():
-    """Obtém entrada do usuário de forma interativa"""
+def obter_entrada_usuario():
     print("\n" + "=" * 60)
-    print("ANÁLISE DE RISCO DE DESMORONAMENTO")
+    print("ANÁLISE DE RISCO DE DESMORONAMENTO E ENCHENTES")
     print("=" * 60 + "\n")
     print("CONFIGURAÇÕES DE CORES:")
     print("• Verde escuro → Matas (baixo risco)")
@@ -252,70 +210,63 @@ def get_user_input():
         print("2. Processar todas as imagens em um diretório")
         print("3. Sair")
 
-        choice = input("\nEscolha uma opção (1-3): ").strip()
+        opcao = input("\nEscolha uma opção (1-3): ").strip()
 
-        if choice == "1":
-            path = input("\nDigite o caminho da imagem: ").strip().replace('"', '')
-            if os.path.isfile(path):
-                return [path]
-            print(f"\n✖ Arquivo não encontrado: {path}")
+        if opcao == "1":
+            caminho = input("\nDigite o caminho da imagem: ").strip().replace('"', '')
+            if os.path.isfile(caminho):
+                return [caminho]
+            print(f"\n✖ Arquivo não encontrado: {caminho}")
 
-        elif choice == "2":
-            dir_path = input("\nDigite o caminho do diretório: ").strip().replace('"', '')
-            if os.path.isdir(dir_path):
-                valid_exts = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']
-                images = []
-                for f in os.listdir(dir_path):
-                    if os.path.splitext(f)[1].lower() in valid_exts:
-                        images.append(os.path.join(dir_path, f))
+        elif opcao == "2":
+            caminho_dir = input("\nDigite o caminho do diretório: ").strip().replace('"', '')
+            if os.path.isdir(caminho_dir):
+                extensoes_validas = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']
+                imagens = []
+                for arquivo in os.listdir(caminho_dir):
+                    if os.path.splitext(arquivo)[1].lower() in extensoes_validas:
+                        imagens.append(os.path.join(caminho_dir, arquivo))
 
-                if images:
-                    print(f"Encontradas {len(images)} imagens para processar.")
-                    return images
+                if imagens:
+                    print(f"Encontradas {len(imagens)} imagens para processar.")
+                    return imagens
                 print("\n✖ Nenhuma imagem encontrada no diretório.")
             else:
-                print(f"\n✖ Diretório não encontrado: {dir_path}")
+                print(f"\n✖ Diretório não encontrado: {caminho_dir}")
 
-        elif choice == "3":
+        elif opcao == "3":
             print("\nEncerrando...")
             sys.exit(0)
 
         else:
             print("\n✖ Opção inválida. Tente novamente.")
 
-def main():
-    """Função principal que orquestra todo o processamento"""
+def principal():
     try:
         print("Inicializando processador de imagens...")
-        processor = LandslideProcessor()
+        processador = ProcessadorRiscoTerreno()
 
-        image_paths = get_user_input()
+        caminhos_imagens = obter_entrada_usuario()
 
-        if not image_paths:
+        if not caminhos_imagens:
             print("Nenhuma imagem para processar.")
             return
 
-        print(f"\nIniciando processamento de {len(image_paths)} imagem(ns)...")
-        successful = 0
+        print(f"\nIniciando processamento de {len(caminhos_imagens)} imagem(ns)...")
+        sucesso = 0
 
-        for i, path in enumerate(image_paths, 1):
+        for i, caminho in enumerate(caminhos_imagens, 1):
             try:
-                print(f"\n[{i}/{len(image_paths)}] Processando: {os.path.basename(path)}")
-                output_path, stats = processor.process_image(path)
-
-                print("\nEstatísticas da imagem:")
-                for area, data in stats.items():
-                    desc = processor.color_mappings[area]['description']
-                    print(f"- {desc}: {data['percentage']:.2f}%")
-
-                successful += 1
+                print(f"\n[{i}/{len(caminhos_imagens)}] Processando: {os.path.basename(caminho)}")
+                caminho_saida, estatisticas = processador.processar_imagem(caminho)
+                sucesso += 1
 
             except Exception as e:
-                print(f"\n✖ Falha ao processar {os.path.basename(path)}: {str(e)}")
+                print(f"\n✖ Falha ao processar {os.path.basename(caminho)}: {str(e)}")
                 continue
 
         print(f"\nProcessamento concluído!")
-        print(f"✔ {successful}/{len(image_paths)} imagens processadas com sucesso")
+        print(f"✔ {sucesso}/{len(caminhos_imagens)} imagens processadas com sucesso")
 
     except KeyboardInterrupt:
         print("\nProcessamento interrompido pelo usuário.")
@@ -327,4 +278,4 @@ def main():
         input("\nPressione Enter para sair...")
 
 if __name__ == "__main__":
-    main()
+    principal()

@@ -5,11 +5,10 @@ from datetime import datetime
 import cv2
 import numpy as np
 
-class FloodAndLandslideProcessor:
+class LandslideProcessor:
     """
     Classe para processamento de imagens de satélite para identificação de:
     - Áreas propensas a desmoronamento
-    - Áreas afetadas por enchentes
     """
 
     def __init__(self):
@@ -18,8 +17,7 @@ class FloodAndLandslideProcessor:
             'matas': {'color': (0, 255, 0), 'description': 'Matas (Baixo risco)'},
             'urbana': {'color': (255, 0, 0), 'description': 'Area Urbana (Medio risco)'},
             'pastagem': {'color': (0, 255, 255), 'description': 'Pastagem (Alto risco)'},
-            'solo_exposto': {'color': (0, 0, 255), 'description': 'Solo Exposto (Alto risco)'},
-            'enchente': {'color': (128, 0, 128), 'description': 'Area Alagada (Enchente)'}
+            'solo_exposto': {'color': (0, 0, 255), 'description': 'Solo Exposto (Alto risco)'}
         }
 
         # Intervalos de cores no espaço HSV
@@ -27,12 +25,8 @@ class FloodAndLandslideProcessor:
             'matas': {'lower': np.array([35, 80, 20]), 'upper': np.array([85, 255, 120])},
             'urbana': {'lower': np.array([0, 0, 120]), 'upper': np.array([180, 60, 255])},
             'solo_exposto': {'lower': np.array([8, 40, 80]), 'upper': np.array([25, 180, 220])},
-            'pastagem': {'lower': np.array([35, 20, 80]), 'upper': np.array([85, 120, 180])},
-            'enchente': {'lower': np.array([0, 30, 0]), 'upper': np.array([30, 255, 80])}
+            'pastagem': {'lower': np.array([35, 20, 80]), 'upper': np.array([85, 120, 180])}
         }
-
-        # Intervalos adicionais para água (azul)
-        self.water_blue_range = {'lower': np.array([80, 40, 20]), 'upper': np.array([140, 255, 220])}
 
         self.alpha = 0.4  # Transparência das áreas destacadas
 
@@ -48,34 +42,6 @@ class FloodAndLandslideProcessor:
         print(f"Imagem carregada: {image.shape[1]}x{image.shape[0]} pixels")
         return image
 
-    def enhance_water_detection(self, hsv_image):
-        """Melhora a detecção de água aplicando múltiplas técnicas"""
-        # Canal Value (V) do HSV - detecta pixels muito escuros
-        v_channel = hsv_image[:, :, 2]
-        _, black_mask = cv2.threshold(v_channel, 40, 255, cv2.THRESH_BINARY_INV)
-
-        # Máscara para tons de azul (água)
-        blue_mask = cv2.inRange(hsv_image, self.water_blue_range['lower'], self.water_blue_range['upper'])
-
-        # Máscara para tons de marrom (água/lama)
-        brown_mask = cv2.inRange(hsv_image, self.color_ranges['enchente']['lower'],
-                                 self.color_ranges['enchente']['upper'])
-
-        # Combina todas as máscaras de água
-        combined_water_mask = cv2.bitwise_or(black_mask, blue_mask)
-        combined_water_mask = cv2.bitwise_or(combined_water_mask, brown_mask)
-
-        # Operações morfológicas para limpar a máscara
-        kernel = np.ones((3, 3), np.uint8)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_CLOSE, kernel)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_OPEN, kernel)
-
-        # Remove ruídos pequenos
-        kernel_big = np.ones((5, 5), np.uint8)
-        combined_water_mask = cv2.morphologyEx(combined_water_mask, cv2.MORPH_OPEN, kernel_big)
-
-        return combined_water_mask
-
     def create_masks(self, hsv_image):
         """Cria máscaras binárias para todos os tipos de áreas definidas"""
         masks = {}
@@ -86,17 +52,13 @@ class FloodAndLandslideProcessor:
             upper = self.color_ranges[terrain_type]['upper']
             masks[terrain_type] = cv2.inRange(hsv_image, lower, upper)
 
-        # Aplica detecção aprimorada de água
-        enhanced_water = self.enhance_water_detection(hsv_image)
-        masks['enchente'] = cv2.bitwise_or(masks['enchente'], enhanced_water)
-
         # Filtro de ruído
         kernel = np.ones((2, 2), np.uint8)
         for terrain_type in masks:
             masks[terrain_type] = cv2.morphologyEx(masks[terrain_type], cv2.MORPH_CLOSE, kernel)
 
-        # Prioridade: enchente > matas > urbana > solo_exposto > pastagem
-        priority_order = ['enchente', 'matas', 'urbana', 'solo_exposto', 'pastagem']
+        # Prioridade: matas > urbana > solo_exposto > pastagem
+        priority_order = ['matas', 'urbana', 'solo_exposto', 'pastagem']
 
         for i, terrain_type in enumerate(priority_order):
             if terrain_type in masks:
@@ -113,7 +75,7 @@ class FloodAndLandslideProcessor:
         total_pixels = image_size[0] * image_size[1]
 
         # Garante que todos os tipos de terreno estejam nas estatísticas
-        all_terrain_types = ['matas', 'urbana', 'pastagem', 'solo_exposto', 'enchente']
+        all_terrain_types = ['matas', 'urbana', 'pastagem', 'solo_exposto']
 
         for terrain_type in all_terrain_types:
             if terrain_type in masks:
@@ -149,13 +111,11 @@ class FloodAndLandslideProcessor:
 
         # Identifica alertas
         alerts = []
-        if stats.get('enchente', {}).get('percentage', 0) > 3:
-            alerts.append("ALERTA: Areas de enchente detectadas")
         if stats.get('solo_exposto', {}).get('percentage', 0) > 8:
             alerts.append("ALERTA: Muito solo exposto risco de erosao")
 
         # Calcula dimensões da legenda
-        items_count = 5  # Total fixo de itens na legenda
+        items_count = 4  # Total fixo de itens na legenda
         base_legend_height = 50 + (items_count * 25)  # 50 para título e margens + 25 por item
         alert_height = len(alerts) * 30  # 30 pixels por alerta
         total_height = base_legend_height + alert_height
@@ -167,7 +127,7 @@ class FloodAndLandslideProcessor:
             base_legend_height = int(base_legend_height * scale_factor)
             alert_height = int(alert_height * scale_factor)
             total_height = base_legend_height + alert_height
-        
+
         if width < legend_width + 20:
             legend_width = width - 20
 
@@ -181,9 +141,9 @@ class FloodAndLandslideProcessor:
         cv2.putText(image, "ANALISE DE RISCO",
                     (20, height - total_height + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
-        # Adiciona itens da legenda (todos os 5 tipos)
+        # Adiciona itens da legenda (todos os 4 tipos)
         y_offset = height - total_height + 55
-        legend_order = ['matas', 'urbana', 'pastagem', 'solo_exposto', 'enchente']
+        legend_order = ['matas', 'urbana', 'pastagem', 'solo_exposto']
 
         for terrain_type in legend_order:
             color = self.color_mappings[terrain_type]['color']
@@ -278,14 +238,13 @@ class FloodAndLandslideProcessor:
 def get_user_input():
     """Obtém entrada do usuário de forma interativa"""
     print("\n" + "=" * 60)
-    print("ANÁLISE DE RISCO DE DESMORONAMENTO E DETECÇÃO DE ENCHENTES")
+    print("ANÁLISE DE RISCO DE DESMORONAMENTO")
     print("=" * 60 + "\n")
     print("CONFIGURAÇÕES DE CORES:")
     print("• Verde escuro → Matas (baixo risco)")
     print("• Verde claro → Pastagem (alto risco)")
     print("• Cinza/Branco → Área urbana (médio risco)")
     print("• Laranja/Bege → Solo exposto (alto risco)")
-    print("• Marrom/Azul/Preto → Água/Enchente")
     print("")
 
     while True:
@@ -328,7 +287,7 @@ def main():
     """Função principal que orquestra todo o processamento"""
     try:
         print("Inicializando processador de imagens...")
-        processor = FloodAndLandslideProcessor()
+        processor = LandslideProcessor()
 
         image_paths = get_user_input()
 

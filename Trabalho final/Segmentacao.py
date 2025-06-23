@@ -141,8 +141,7 @@ Dimensões: {dimensoes[1]}x{dimensoes[0]} pixels
     def salvar_imagem(self, imagem, caminho_original):
         try:
             nome_arquivo, ext = os.path.splitext(caminho_original)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            caminho_saida = f"{nome_arquivo}_processada_{timestamp}.png"
+            caminho_saida = f"{nome_arquivo}_processada.png"
 
             sucesso = cv2.imwrite(caminho_saida, imagem)
             if not sucesso:
@@ -151,7 +150,7 @@ Dimensões: {dimensoes[1]}x{dimensoes[0]} pixels
             return caminho_saida
         except Exception as e:
             print(f"Erro ao salvar imagem: {e}")
-            caminho_reserva = f"processada_{timestamp}.png"
+            caminho_reserva = f"processada.png"
             cv2.imwrite(caminho_reserva, imagem)
             return caminho_reserva
 

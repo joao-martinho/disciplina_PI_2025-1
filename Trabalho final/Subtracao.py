@@ -39,8 +39,8 @@ def main():
 
         imagem_diferenca, imagem_binaria = subtrair_imagens(imagem_antes, imagem_depois)
 
-        salvar_imagem(imagem_diferenca, "imagem_diferenca.png")
-        salvar_imagem(imagem_binaria, "imagem_diferenca_binaria.png")
+        salvar_imagem(imagem_diferenca, caminho_antes + "imagem_sub.png")
+        salvar_imagem(imagem_binaria, caminho_antes + "_sub_bin.png")
 
     except Exception as e:
         print(f"Erro: {str(e)}")

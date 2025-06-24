@@ -1,7 +1,55 @@
 \documentclass{article}
-\author{Felipe Karmann, João Souza}
-\date{30 de maio de 2025}
-\title{Modelagem e Análise de Riscos Ambientais em Blumenau por Meio de Imagens de Satélite}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage[utf8]{inputenc}   % Para usar acentuação direta no código
+\usepackage[T1]{fontenc}      % Para melhorar a codificação das fontes
+\usepackage[portuguese]{babel}    % Ou 'portuguese', mas 'brazil' é preferido
+
+\author{Felipe B. R. Karmann, João M. S. da Silva e Souza}
+\date{30 de junho de 2025}
+\title{Uso de técnicas de processamento de imagem na identificação de alterações na cobertura vegetal em Blumenau}
+
+\setlength{\oddsidemargin}{-0.5cm} % Margem esquerda
+\setlength{\evensidemargin}{-0.5cm} % Margem direita (para documentos de duas páginas)
+\setlength{\textwidth}{17cm} % Largura do texto
+\setlength{\topmargin}{-1.5cm} % Margem superior
+\setlength{\textheight}{24cm} % Altura do texto
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single
+}
+
+\lstset{style=mystyle}
+
+% remova comentários e mude os nomes de métodos e variáveis para usar sempre o português
+
+% 4243
+% 2380
 
 \begin{document}
 
@@ -11,94 +59,207 @@
 
 A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato devido à sua geografia montanhosa, rios urbanos e padrões de chuva intensos. A gestão de riscos naturais requer ferramentas que combinem automação, visão computacional e análise de dados geográficos para monitorar o uso do solo e identificar áreas críticas.
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, com as informações colhidas no estudo de Lacerda, Fonseca e Faria (2017), calcule as probabiliades de alagamento na região retratada. O algoritmo tem por objetivo ajudar órgãos públicos, como a Defesa Civil, na tomada de decisão rápida e baseada em evidência visual.
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de subtração de imagens, identifica alterações na cobertura vegetal de áreas que sofreram desastres naturais.
 
 \section{Montagem da base}
-\subsection{Fonte de dados}
 
-A base de imagens foi criada com fotos de satélite da região de Blumenau, com foco naquelas com histórico significativo de alagamento.
+A base de imagens foi criada com fotos de satélite da região de Blumenau obtidas no serviço Google Earth, com foco em áreas com grande cobertura vegetal. Para cada área selecionada, tiramos duas fotos, uma do dia 19 de abril de 2023 e outra do dia 17 de abril de 2025, tendo, portanto, quase exatamente dois anos de diferença. As fotos foram tiradas de uma altitude considerada por nós apropriada para a detecção de diferenças na cobertura vegetal.
 
-\subsection{Estrutura da base}
-
-As imagens foram rotuladas com base em coloração e características visuais, utilizando segmentação por cor em espaço HSV em vez de máscaras manuais.
+A equipe tomou o devido cuidado para garantir que cada par de fotos tivesse a mesma posição no mapa para que não houvesse diferenças que não aquelas causadas pela passagem do tempo.
 
 \section{Preparação}
 
-O programa usa subtração de cores para encontrar em cada imagem seções que correspondam aos quatro tipos de solo (área urbana, solo exposto, pastagem e matas), e as áreas alagadas, se houver.
-
-Cada imagem passa pelas seguintes etapas:
+O nosso programa pode ser dividido em quatro etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
 \begin{itemize}
-    \item conversão para HSV: o modelo trabalha no espaço HSV (Hue, Saturation, Value), mais robusto à variação de iluminação;
-    \item redução de ruído com filtro bilateral;
-    \item criação de máscaras binárias para classes de terreno (matas, urbana, solo exposto, pastagem e enchente).
+  \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram altamente precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.);
+  \item Binarização (\texttt{Binarizar.py}): esta etapa se mostrou necessária por conta de diferenças que inevitavelmente existem entre duas fotos tiradas por satélite em momentos diferentes, normalmente relacionadas à hora do dia em que são tiradas, à qualidade da câmera usada ou à presença de filtros. Para normalizar o padrão de cores entre imagens, o algoritmo escolhe automaticamente o limiar usado na binarização calculando o nível médio de intensidade da imagem. Observamos que, invariavelmente, as áreas vegetais tornavam-se a parte escura da imagem, e todo o resto a parte clara;
+  \item Subtração (\texttt{Subtrair.py}): em seguida, fazemos a subtração das duas imagens, cada uma representando o mesmo lugar em momentos diferentes;
+  \item Erosão e dilatação (\texttt{Abertura.py}): agora, já obtivemos a diferença exata entre as duas imagens, representadas, no resultado da subtração, pelas regiões brancas. No entanto, devido à diferença que tende a existir entre duas imagens quaisquer, é provável que a maioria das regiões brancas representa não mais do que um pequeno acidente de fotografia, como uma sombra. Por isto, decidimos aplicar no final uma combinação de erosão e dilatação usando um elemento estruturante de tamanho 3 (também estudamos outros tamanhos, e o algoritmo pode ser ajustado conforme à necessidade). Desta maneira, regiões brancas insignificantes são eliminadas na erosão e não têm chance de retornar na dilatação, deixando apenas regiões significativas que possuem alto valor semântico para a análise de efeitos dos desastres naturais. Esta etapa pode ser vista como opcional; a identificação de alterações já seria possível sem ela, mas acreditamos que ela refina o resultado e o torna muito mais amigável ao usuário final.
 \end{itemize}
-
-A função \texttt{enhance\_water\_detection()} melhora a identificação de áreas alagadas, mesmo sob sombra ou baixa visibilidade.
-
-\section{Modelo da rede}
-
-Embora não se trate de uma rede neural convencional, este algoritmo pode ser interpretado como uma rede de regras heurísticas e de segmentação que classifica pixels da imagem com base em cores HSV.
-
-\section{Treinamento}
-
-Este algoritmo não requer treinamento supervisionado pois não utiliza redes neurais; ele opera por regras fixas. No entanto, as faixas HSV foram calibradas manualmente com base em amostras de imagens reais de Blumenau.
-
-\section{Classificação e testes}
-
-Durante a classificação, o algoritmo atribui categorias de risco às áreas da imagem com base na predominância de cada tipo:
-\begin{itemize}
-    \item solo exposto ou pastagem $>$ 8\% $\rightarrow$ risco de erosão ou deslizamento;
-    \item enchente $>$ 3\% $\rightarrow$ risco de alagamento urbano ou rural.
-\end{itemize}
-
-Exemplo de estatísticas geradas:
-
-\begin{verbatim}
-
-  Estatísticas da imagem:
-- Matas (Baixo risco): 38.45%
-- Área Urbana (Médio risco): 23.12%
-- Pastagem (Alto risco): 14.80%
-- Solo Exposto (Alto risco): 12.55%
-- Área Alagada (Enchente): 4.10%
-
-  ALERTA: Areas de enchente detectadas
-  ALERTA: Muito solo exposto risco de erosão
-
-\end{verbatim}
 
 \section{Código}
 
-O programa está dividido em funções-chave:
+Conforme mencionado anteriormente, nossa solução é dividida em quatro etapas básicas, que por conveniência foram escritas cada uma em seu próprio arquivo, mas também unidas num outro arquivo. Desta maneira, pudemos testar cada etapa do algoritmo. A entrada usada em cada arquivo era a saída gerada pela etapa anterior.
 
-\begin{itemize}
-\item \texttt{load\_image(path)}: carrega e valida a imagem de entrada;
+Começando pela parte que, do ponto de vista da codificação, foi a mais delicada, a Mean Shift (alguns trechos de código e linhas em branco foram removidos desta amostra para economizar espaço no documento):
 
-\item \texttt{create\_masks(hsv)}: gera máscaras binárias para cada classe de risco com base em faixas de cor HSV;
+\subsection{Mean Shift}
 
-\item \texttt{enhance\_water\_detection(hsv)}: aprimora a detecção de água utilizando múltiplas técnicas (tons de azul, marrom e sombras);
+\begin{verbatim}
+        array_imagem = np.array(imagem_original)
+        altura, largura = array_imagem.shape[:2]
+        imagem_plana = array_imagem.reshape((-1, 3))
 
-\item \texttt{apply\_masks(image, masks)}: aplica as máscaras sobre a imagem com cores indicativas e transparência;
+        largura_banda = estimate_bandwidth(imagem_plana, quantile=quantil, n_samples=amostras)
+        if largura_banda <= 0:
+            largura_banda = 0.1
 
-\item \texttt{calculate\_risk\_areas()}: calcula a porcentagem de cada classe na imagem;
+        print(f"Quantil usado: {quantil}, Largura de banda estimada: {largura_banda:.2f}")
 
-\item \texttt{add\_legend\_and\_stats()}: gera legenda visual e insere alertas diretamente na imagem final;
+        ms = MeanShift(bandwidth=largura_banda, bin_seeding=True)
+        ms.fit(imagem_plana)
+        rotulos = ms.labels_
+        centros_cluster = ms.cluster_centers_
+        num_clusters = len(np.unique(rotulos))
 
-\item \texttt{process\_image(image\_path)}: integra todas as etapas para processar uma imagem completa.
-\end{itemize}
+        imagem_segmentada = centros_cluster[rotulos].reshape(array_imagem.shape)
+        imagem_segmentada = np.clip(imagem_segmentada, 0, 255).astype(np.uint8)
+
+        imagem_resultante = Image.fromarray(imagem_segmentada)
+        imagem_resultante.save(caminho_saida)
+
+        return num_clusters
+\end{verbatim}
+
+O código acima é responsável por transformar a imagem em uma matriz plana de pixels, onde cada linha é um pixel com valores RGB, calcular o parâmetro de largura de banda para o Mean Shift e executar o seu algoritmo de segmentação nos pixels da imagem; cada pixel é atribuído a um cluster baseado em similaridade de cor. Finalmente, cada pixel é substiuído pelo centroide do seu cluster, resultando numa segmentação extremamente precisa e detalhada.
+
+\subsection{Binarização}
+
+\begin{verbatim}
+    imagem = cv2.imread(caminho_imagem, cv2.IMREAD_GRAYSCALE)
+
+    limiar = np.mean(imagem)
+    print(f"Limiar automático calculado: {limiar:.2f}")
+    _, imagem_binarizada = cv2.threshold(imagem, limiar, 255, cv2.THRESH_BINARY)
+    cv2.imwrite(caminho_saida, imagem_binarizada)
+    print(f"Imagem binarizada salva com sucesso em: {caminho_saida}")
+\end{verbatim}
+
+O algoritmo de binarização carrega a imagem em escala de cinza, calcula o limiar automaticamente como a média dos valores de intensidade dos pixels e aplica a binarização usando este limiar: pixels acima viram branco (255), abaixo viram preto (0).
+
+\subsection{Subtração}
+
+\begin{verbatim}
+    imagem_diferenca = cv2.absdiff(imagem_antes, imagem_depois)
+    imagem_diferenca_cinza = cv2.cvtColor(imagem_diferenca, cv2.COLOR_BGR2GRAY)
+    _, imagem_binaria = cv2.threshold(imagem_diferenca_cinza, 50, 255, cv2.THRESH_BINARY)
+
+    return imagem_diferenca, imagem_binaria
+\end{verbatim}
+
+O algoritmo de subtração calcula a diferença absoluta entre as duas imagens.
+
+\subsection{Abertura}
+
+\begin{verbatim}
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    img_filtrada = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+
+    cv2.imwrite(caminho_saida, img_filtrada)
+    print(f"Imagem filtrada salva em: {caminho_saida} (Kernel = {kernel_size}x{kernel_size})")
+\end{verbatim}
+
+O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) de tamanho 3 e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
 
 \section{Resultados}
-\subsection{Demonstração de entradas e saídas}
 
-Entrada: imagem de satélite da cidade de Blumenau após período de chuvas:
+\subsection{Exemplo A}
 
-Saída: imagem processada com destaque visual das áreas e legendas:
+Para esta demonstração, usaremos duas imagens da região central de Blumenau, uma de 2023 e outra de 2025:
 
-\begin{itemize}
-    \item verde escuro $\rightarrow$ matas;
-    \item vermelho $\rightarrow$ solo exposto;
-    \item azul $\rightarrow$ áreas urbanas;
-    \item roxo ou preto $\rightarrow$ enchente.
-\end{itemize}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012023.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012025.png}
+        \label{2025}
+    \end{subfigure}
+    \label{original}
+\end{figure}
+
+Como é fácil notar, as imagens possuem diferença significativa no nível de intensidade. Nós atribuímos a causa provável disto à hora do dia e às condições de iluminação natural.
+
+Conforme explicado anteriormente, o próximo passo é a clusterização das imagens usando o algoritmo Mean Shift:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012023_mean_shift.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012025_mean_shift.png}
+        \label{2025}
+    \end{subfigure}
+    \label{segmentada}
+\end{figure}
+
+Vale notar que a segmentação da imagem de 2023 assinalou muitas pequenas regiões da cidade com a mesma cor que a água do rio. Isto não será um problema; o algoritmo de binarização destacará a porção vegetal de todas as regiões mais claras:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012023_bin.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012025_bin.png}
+        \label{2025}
+    \end{subfigure}
+    \label{binarizada}
+\end{figure}
+
+Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não-naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{012025_sub.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{resultado01.png}
+        \label{2025}
+    \end{subfigure}
+    \label{resultado}
+\end{figure}
+
+A partir da última figura, podemos observar que a maior área de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
+
+\subsection{Exemplo B}
+
+Abaixo daremos outro exemplo, desta vez com outra região da cidade, um pouco mais densa de prédios. Para economizar espaço, mostraremos apenas as imagens originais e o resultado final.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{022023.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{022025.png}
+        \label{2025}
+    \end{subfigure}
+    \label{original}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{022025_sub.png}
+        \label{2023}
+    \end{subfigure}
+    \hfill % Espaço entre as imagens
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{resultado02.png}
+        \label{2025}
+    \end{subfigure}
+    \label{resultado}
+\end{figure}
+
+Neste exemplo, verificamos uma região de interesse na porção noroeste da imagem. Conforme mostram as imagens originais, naquele local houve perda de cobertura vegetal.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{referencias}
 
 \end{document}

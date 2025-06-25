@@ -19,38 +19,6 @@
 \setlength{\topmargin}{-1.5cm} % Margem superior
 \setlength{\textheight}{24cm} % Altura do texto
 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{magenta},
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,
-    breaklines=true,
-    captionpos=b,
-    keepspaces=true,
-    numbers=left,
-    numbersep=5pt,
-    showspaces=false,
-    showstringspaces=false,
-    showtabs=false,
-    tabsize=2,
-    frame=single
-}
-
-\lstset{style=mystyle}
-
-% remova comentários e mude os nomes de métodos e variáveis para usar sempre o português
-
-% 4243
-% 2380
-
 \begin{document}
 
 \maketitle
@@ -59,25 +27,26 @@
 
 A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato devido à sua geografia montanhosa, rios urbanos e padrões de chuva intensos. A gestão de riscos naturais requer ferramentas que combinem automação, visão computacional e análise de dados geográficos para monitorar o uso do solo e identificar áreas críticas.
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de subtração de imagens, identifica alterações na cobertura vegetal de áreas que sofreram desastres naturais.
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifica alterações na cobertura vegetal de áreas que sofreram desastres naturais.
 
-\section{Montagem da base}
+\section{Fonte dos dados}
 
 A base de imagens foi criada com fotos de satélite da região de Blumenau obtidas no serviço Google Earth, com foco em áreas com grande cobertura vegetal. Para cada área selecionada, tiramos duas fotos, uma do dia 19 de abril de 2023 e outra do dia 17 de abril de 2025, tendo, portanto, quase exatamente dois anos de diferença. As fotos foram tiradas de uma altitude considerada por nós apropriada para a detecção de diferenças na cobertura vegetal.
 
 A equipe tomou o devido cuidado para garantir que cada par de fotos tivesse a mesma posição no mapa para que não houvesse diferenças que não aquelas causadas pela passagem do tempo.
 
-\section{Preparação}
+\section{O algoritmo}
 
 O nosso programa pode ser dividido em quatro etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
 \begin{itemize}
-  \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram altamente precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.);
+  \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram altamente precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.). Esta etapa não é indispensável; a binarização sozinha é suficiente para destacar a vegetação em muitos casos, mas a segmentação ajuda a eliminar ruídos e sombras, garantindo assim um resultado mais preciso;
   \item Binarização (\texttt{Binarizar.py}): esta etapa se mostrou necessária por conta de diferenças que inevitavelmente existem entre duas fotos tiradas por satélite em momentos diferentes, normalmente relacionadas à hora do dia em que são tiradas, à qualidade da câmera usada ou à presença de filtros. Para normalizar o padrão de cores entre imagens, o algoritmo escolhe automaticamente o limiar usado na binarização calculando o nível médio de intensidade da imagem. Observamos que, invariavelmente, as áreas vegetais tornavam-se a parte escura da imagem, e todo o resto a parte clara;
   \item Subtração (\texttt{Subtrair.py}): em seguida, fazemos a subtração das duas imagens, cada uma representando o mesmo lugar em momentos diferentes;
-  \item Erosão e dilatação (\texttt{Abertura.py}): agora, já obtivemos a diferença exata entre as duas imagens, representadas, no resultado da subtração, pelas regiões brancas. No entanto, devido à diferença que tende a existir entre duas imagens quaisquer, é provável que a maioria das regiões brancas representa não mais do que um pequeno acidente de fotografia, como uma sombra. Por isto, decidimos aplicar no final uma combinação de erosão e dilatação usando um elemento estruturante de tamanho 3 (também estudamos outros tamanhos, e o algoritmo pode ser ajustado conforme à necessidade). Desta maneira, regiões brancas insignificantes são eliminadas na erosão e não têm chance de retornar na dilatação, deixando apenas regiões significativas que possuem alto valor semântico para a análise de efeitos dos desastres naturais. Esta etapa pode ser vista como opcional; a identificação de alterações já seria possível sem ela, mas acreditamos que ela refina o resultado e o torna muito mais amigável ao usuário final.
+  \item Erosão e dilatação (\texttt{Abertura.py}): agora, já obtivemos a diferença exata entre as duas imagens, representadas, no resultado da subtração, pelas regiões brancas. No entanto, devido à diferença que tende a existir entre duas imagens quaisquer, é provável que a maioria das regiões brancas representa não mais do que um pequeno acidente de fotografia, como uma sombra. Por isto, decidimos aplicar no final uma combinação de erosão e dilatação usando um elemento estruturante de tamanho 3 (também estudamos outros tamanhos, e o algoritmo pode ser ajustado conforme à necessidade). Desta maneira, regiões brancas insignificantes são eliminadas na erosão e não têm chance de retornar na dilatação, deixando apenas regiões significativas que possuem alto valor semântico para a análise de efeitos dos desastres naturais.
+  \item Aplicação de máscaras (\texttt{AplicarMascara.py}): esta etapa pode ser vista como opcional; seu único propósito é facilitar a leitura do resultado. A partir do resultado da etapa anterior, as regiões brancas são transformadas em máscaras, que são em seguida aplicadas à imagem original para assinalar as regiões de interesse.
 \end{itemize}
 
-\section{Código}
+\section{Trechos de código}
 
 Conforme mencionado anteriormente, nossa solução é dividida em quatro etapas básicas, que por conveniência foram escritas cada uma em seu próprio arquivo, mas também unidas num outro arquivo. Desta maneira, pudemos testar cada etapa do algoritmo. A entrada usada em cada arquivo era a saída gerada pela etapa anterior.
 
@@ -152,23 +121,24 @@ O algoritmo de subtração calcula a diferença absoluta entre as duas imagens.
 
 O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) de tamanho 3 e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
 
-\section{Resultados}
-
-\subsection{Exemplo A}
+\section{Exemplo de resultados}
 
 Para esta demonstração, usaremos duas imagens da região central de Blumenau, uma de 2023 e outra de 2025:
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012023.png}
+        \includegraphics[width=\textwidth]{../Imagens/012023.png}
+        \caption{O centro de Blumenau em 2023.}
         \label{2023}
     \end{subfigure}
     \hfill % Espaço entre as imagens
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012025.png}
+        \includegraphics[width=\textwidth]{../Imagens/012025.png}
+        \caption{O centro de Blumenau em 2025.}
         \label{2025}
     \end{subfigure}
+    \caption{As fotos originais.}
     \label{original}
 \end{figure}
 
@@ -179,14 +149,17 @@ Conforme explicado anteriormente, o próximo passo é a clusterização das imag
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012023_mean_shift.png}
+        \includegraphics[width=\textwidth]{../Imagens/012023_mean_shift.png}
+        \caption{A foto de 2023 segmentada.}
         \label{2023}
     \end{subfigure}
     \hfill % Espaço entre as imagens
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012025_mean_shift.png}
+        \includegraphics[width=\textwidth]{../Imagens/012025_mean_shift.png}
+        \caption{A foto de 2025 segmentada.}
         \label{2025}
     \end{subfigure}
+    \caption{Resultado da aplicação do Mean Shift.}
     \label{segmentada}
 \end{figure}
 
@@ -195,14 +168,17 @@ Vale notar que a segmentação da imagem de 2023 assinalou muitas pequenas regi�
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012023_bin.png}
+        \includegraphics[width=\textwidth]{../Imagens/012023_bin.png}
+        \caption{A foto de 2023 binarizada.}
         \label{2023}
     \end{subfigure}
     \hfill % Espaço entre as imagens
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012025_bin.png}
+        \includegraphics[width=\textwidth]{../Imagens/012025_bin.png}
+        \caption{A foto de 2025 binarizada.}
         \label{2025}
     \end{subfigure}
+    \caption{Resultado da binarização.}
     \label{binarizada}
 \end{figure}
 
@@ -211,52 +187,40 @@ Finalmente, é o momento de fazer a subtração das duas imagens para apontar di
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{012025_sub.png}
+        \includegraphics[width=\textwidth]{../Imagens/012025_sub.png}
+        \caption{O resultado da subtração das imagens.}
         \label{2023}
     \end{subfigure}
     \hfill % Espaço entre as imagens
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{resultado01.png}
+        \includegraphics[width=\textwidth]{../Imagens/resultado01.png}
+        \caption{A imagem ao lado após a erosão e a dilatação.}
         \label{2025}
     \end{subfigure}
+    \caption{Isolando regiões de interesse.}
     \label{resultado}
 \end{figure}
 
 A partir da última figura, podemos observar que a maior área de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
 
-\subsection{Exemplo B}
-
-Abaixo daremos outro exemplo, desta vez com outra região da cidade, um pouco mais densa de prédios. Para economizar espaço, mostraremos apenas as imagens originais e o resultado final.
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{022023.png}
-        \label{2023}
+        \includegraphics[width=\textwidth]{../Imagens/resultado01_mask.png}
+        \caption{A máscara isolada.}
+        \label{2025}
     \end{subfigure}
     \hfill % Espaço entre as imagens
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{022025.png}
+        \includegraphics[width=\textwidth]{../Imagens/012025_mask.png}
+        \caption{A máscara aplicada à foto de 2025.}
         \label{2025}
     \end{subfigure}
-    \label{original}
+    \caption{O resultado da aplicação das máscaras.}
+    \label{máscara}
 \end{figure}
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{022025_sub.png}
-        \label{2023}
-    \end{subfigure}
-    \hfill % Espaço entre as imagens
-    \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{resultado02.png}
-        \label{2025}
-    \end{subfigure}
-    \label{resultado}
-\end{figure}
-
-Neste exemplo, verificamos uma região de interesse na porção noroeste da imagem. Conforme mostram as imagens originais, naquele local houve perda de cobertura vegetal.
+Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente.
 
 \nocite{*}
 \bibliographystyle{plain}

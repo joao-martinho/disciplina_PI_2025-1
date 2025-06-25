@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import sys
 
-def filtrar_regioes_pequenas(caminho_entrada, caminho_saida, kernel_size=3):
+def filtrar_regioes_pequenas(caminho_entrada, caminho_saida, kernel_size=2):
     img = cv2.imread(caminho_entrada, cv2.IMREAD_GRAYSCALE)
     if img is None:
         print("Erro: Não foi possível carregar a imagem. Verifique o caminho.")
@@ -19,4 +19,4 @@ if __name__ == "__main__":
     caminho_entrada = input("Caminho da imagem binária de entrada: ").strip('"')
     caminho_saida = input("Caminho para salvar a imagem filtrada: ").strip('"')
 
-    filtrar_regioes_pequenas(caminho_entrada, caminho_saida, kernel_size=3)
+    filtrar_regioes_pequenas(caminho_entrada, caminho_saida, kernel_size=2)

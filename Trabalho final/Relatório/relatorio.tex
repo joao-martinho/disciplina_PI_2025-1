@@ -48,7 +48,7 @@ O nosso programa pode ser dividido em quatro etapas básicas, cada uma consistin
 
 \section{Trechos de código}
 
-Conforme mencionado anteriormente, nossa solução é dividida em quatro etapas básicas, que por conveniência foram escritas cada uma em seu próprio arquivo, mas também unidas num outro arquivo. Desta maneira, pudemos testar cada etapa do algoritmo. A entrada usada em cada arquivo era a saída gerada pela etapa anterior.
+Conforme mencionado anteriormente, nossa solução é dividida em quatro etapas básicas, que foram escritas cada uma em seu próprio arquivo; desta maneira, pudemos testar cada etapa do algoritmo separadamente. A entrada usada em cada arquivo era a saída gerada pela etapa anterior.
 
 Começando pela parte que, do ponto de vista da codificação, foi a mais delicada, a Mean Shift (alguns trechos de código e linhas em branco foram removidos desta amostra para economizar espaço no documento):
 
@@ -121,6 +121,22 @@ O algoritmo de subtração calcula a diferença absoluta entre as duas imagens.
 
 O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) de tamanho 3 e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
 
+\subsection{Aplicação de máscaras}
+
+\begin{verbatim}
+    resultado = imagem.copy()
+    for mascara in mascaras:
+        regiao_mascarada = cv2.bitwise_and(imagem, imagem, mask=mascara)
+        hsv = cv2.cvtColor(regiao_mascarada, cv2.COLOR_BGR2HSV)
+        hsv[:,:,1] = 255  # Saturação máxima
+        hsv[:,:,2] = np.where(mascara > 0, 255, hsv[:,:,2])  # Valor máximo nas áreas mascaradas
+        regiao_saturada = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        resultado = cv2.addWeighted(resultado, 1, regiao_saturada, 0.7, 0)
+    return resultado
+\end{verbatim}
+
+O algoritmo de aplicação de máscaras retorna uma nova imagem onde as áreas definidas pelas máscaras foram realçadas visualmente, com cores mais saturadas e brilho máximo. As outras regiões permanecem inalteradas.
+
 \section{Exemplo de resultados}
 
 Para esta demonstração, usaremos duas imagens da região central de Blumenau, uma de 2023 e outra de 2025:
@@ -182,7 +198,7 @@ Vale notar que a segmentação da imagem de 2023 assinalou muitas pequenas regi�
     \label{binarizada}
 \end{figure}
 
-Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não-naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
+Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
 
 \begin{figure}[H]
     \centering
@@ -220,7 +236,7 @@ A partir da última figura, podemos observar que a maior área de interesse est�
     \label{máscara}
 \end{figure}
 
-Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente.
+Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente. Observa-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse.
 
 \nocite{*}
 \bibliographystyle{plain}

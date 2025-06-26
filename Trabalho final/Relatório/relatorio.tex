@@ -23,11 +23,29 @@
 
 \maketitle
 
-\section{Descrição do problema}
+\section{Introdução}
+\subsection{Descrição do problema}
 
 A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato devido à sua geografia montanhosa, rios urbanos e padrões de chuva intensos. A gestão de riscos naturais requer ferramentas que combinem automação, visão computacional e análise de dados geográficos para monitorar o uso do solo e identificar áreas críticas.
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais.
+\subsection{Trabalhos-base}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../tabela.png}
+  \caption{Tabela comparativa dos trabalhos-base deste estudo.}
+  \label{Tabela comparativa}
+\end{figure}
+
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um algoritmo que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais.
+
+A lógica da separação da vegetação em diferentes níveis de densidade baseada em imagens de momentos diferentes foi inspirada nas técnicas descritas por Nóbrega \textit{et al}. (2023)\cite{artigo01}, que reforçam a eficácia da classificação espectral na identificação de alterações no solo.
+
+A estratégia de comparar imagens de diferentes anos com o objetivo de avaliar a perda de cobertura vegetal foi fundamentada nas práticas descritas por Lima \textit{et al}. (2021)\cite{artigo03}, cujo trabalho evidenciou os impactos da urbanização por meio de processamento digital de imagens.
+
+O uso de indicadores visuais para medir a cobertura vegetal, como o NDVI abordado por Barros {et al}. (2020)\cite{artigo02}, foi importante para embasar a importância da detecção automática de alterações no solo em áreas urbanas vulneráveis.
+
+As técnicas de segmentação, binarização, análise multitemporal e classificação supervisionada usadas nos artigos serviram de inspiração direta para o pipeline da nossa solução, especialmente a separação por tonalidade, a subtração temporal e o uso de máscaras para destacar mudanças.
 
 \section{Fonte dos dados}
 
@@ -35,9 +53,9 @@ A base de imagens foi criada por nós a partir de fotos de satélite da região 
 
 A equipe tomou o devido cuidado para garantir que cada par de fotos tivesse a mesma posição no mapa para que não houvesse diferenças que não aquelas causadas pela passagem do tempo.
 
-\section{O algoritmo}
+\section{A pipeline}
 
-O nosso programa pode ser dividido em cinco etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
+O nosso algoritmo pode ser dividido em cinco etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
 \begin{itemize}
   \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.) O script pergunta ao usuário pelo parâmetro quantil desejado; para os exemplos deste trabalho, usamos sempre 0,1. Esta etapa não é indispensável; a binarização sozinha é suficiente para destacar a vegetação em muitos casos, mas a segmentação ajuda a eliminar ruídos e sombras, garantindo assim um resultado mais preciso;
   \item Binarização (\texttt{Binarizar.py}): esta etapa se mostrou necessária por conta de diferenças que inevitavelmente existem entre duas fotos tiradas por satélite em momentos diferentes, normalmente relacionadas à hora do dia em que são tiradas, à qualidade da câmera usada ou à presença de filtros. Para normalizar o padrão de cores entre imagens, o algoritmo escolhe automaticamente o limiar usado na binarização calculando o nível médio de intensidade da imagem. Observamos que, invariavelmente, as áreas vegetais tornavam-se a parte escura da imagem, e todo o resto a parte clara;
@@ -118,8 +136,8 @@ O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel
     for mascara in mascaras:
         regiao = cv2.bitwise_and(imagem, imagem, mask=mascara)
         hsv = cv2.cvtColor(regiao, cv2.COLOR_BGR2HSV)
-        hsv[:, :, 1] = 255  # saturação máxima
-        hsv[:, :, 2] = np.where(mascara > 0, 255, hsv[:, :, 2])  # brilho máximo na região
+        hsv[:, :, 1] = 255
+        hsv[:, :, 2] = np.where(mascara > 0, 255, hsv[:, :, 2])
 
         regiao_realcada = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
         resultado = cv2.addWeighted(resultado, 1, regiao_realcada, 0.7, 0)
@@ -211,30 +229,12 @@ Finalmente, é o momento de fazer a subtração das duas imagens para apontar di
 
 A partir da última figura, podemos observar que a maior região de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{../Imagens/resultado01_mask.png}
-        \caption{A máscara isolada.}
-        \label{2025}
-    \end{subfigure}
-    \hfill % Espaço entre as imagens
-    \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{../Imagens/012025_mask.png}
-        \caption{A máscara aplicada à foto de 2025.}
-        \label{2025}
-    \end{subfigure}
-    \caption{O resultado da aplicação das máscaras.}
-    \label{máscara}
-\end{figure}
-
-Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente. Observa-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse. Ao mesmo tempo, as diferenças presentes na malha urbana são assinaladas em azul, e em verde (turquesa) as diferenças de tipos vegetais (florestas em oposição a pastos, por exemplo). Isto, é claro, é um acidente surgido do contraste entre o solo e a máscara, mas pode ser aproveitado para facilitar a interpretação dos resultados.
+Por motivos de limite no número de páginas do relatório, não mostraremos os resultados da etapa de aplicação de máscaras, mas as imagens serão entregues com o trabalho e podem ser consultadas. Observando-as, verficica-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse. Ao mesmo tempo, as diferenças presentes na malha urbana são assinaladas em azul, e em verde (turquesa) as diferenças de tipos vegetais (florestas em oposição a pastos, por exemplo). Isto, é claro, é um acidente surgido do contraste entre o solo e a máscara, mas pode ser aproveitado para facilitar a interpretação dos resultados.
 
 \section{Conclusão}
 
 O nosso algoritmo mostrou-se eficaz na identificação de alterações na cobertura vegetal; a sua combinação estratégica de técnicas simples do processamento de imagem tem o potencial de ajudar profissionais a analisar os efeitos de desastres naturais.
 
-\nocite{*}
 \bibliographystyle{plain}
 \bibliography{referencias}
 

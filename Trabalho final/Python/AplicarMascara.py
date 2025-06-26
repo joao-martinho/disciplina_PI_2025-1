@@ -34,8 +34,8 @@ def aplicar_mascaras(imagem, mascaras):
     for mascara in mascaras:
         regiao = cv2.bitwise_and(imagem, imagem, mask=mascara)
         hsv = cv2.cvtColor(regiao, cv2.COLOR_BGR2HSV)
-        hsv[:, :, 1] = 255  # saturação máxima
-        hsv[:, :, 2] = np.where(mascara > 0, 255, hsv[:, :, 2])  # brilho máximo na região
+        hsv[:, :, 1] = 255
+        hsv[:, :, 2] = np.where(mascara > 0, 255, hsv[:, :, 2])
 
         regiao_realcada = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
         resultado = cv2.addWeighted(resultado, 1, regiao_realcada, 0.7, 0)

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2025.6.24)  25 JUN 2025 16:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2025.6.24)  26 JUN 2025 11:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -300,56 +300,39 @@ LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 4
 File: t1cmtt.fd 2022/07/10 v2.5l Standard LaTeX font definitions
 ) [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (9.68268pt too wide) in paragraph at lines 81--81
-[]        \T1/cmtt/m/n/10 largura_banda = estimate_bandwidth(imagem_plana, quan
-tile=quantil, n_samples=amostras)[] 
- []
-
-[2]
-Overfull \hbox (9.68268pt too wide) in paragraph at lines 120--120
-[]    \T1/cmtt/m/n/10 print(f"Imagem filtrada salva em: {caminho_saida} (Kernel
- = {kernel_size}x{kernel_size})")[] 
- []
-
-
-Overfull \hbox (20.18011pt too wide) in paragraph at lines 136--136
-[]        \T1/cmtt/m/n/10 hsv[:,:,2] = np.where(mascara > 0, 255, hsv[:,:,2])  
-# Valor máximo nas áreas mascaradas[] 
- []
-
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
 <../Imagens/012023.png, id=16, 385.44pt x 385.44pt>
 File: ../Imagens/012023.png Graphic file (type png)
 <use ../Imagens/012023.png>
-Package pdftex.def Info: ../Imagens/012023.png  used on input line 147.
+Package pdftex.def Info: ../Imagens/012023.png  used on input line 139.
 (pdftex.def)             Requested size: 232.17241pt x 232.17151pt.
 <../Imagens/012025.png, id=17, 385.44pt x 385.44pt>
 File: ../Imagens/012025.png Graphic file (type png)
 <use ../Imagens/012025.png>
-Package pdftex.def Info: ../Imagens/012025.png  used on input line 153.
+Package pdftex.def Info: ../Imagens/012025.png  used on input line 145.
 (pdftex.def)             Requested size: 232.17241pt x 232.17151pt.
-[3]
+ [3]
 <../Imagens/012023_mean_shift.png, id=21, 513.92pt x 513.92pt>
 File: ../Imagens/012023_mean_shift.png Graphic file (type png)
 <use ../Imagens/012023_mean_shift.png>
 Package pdftex.def Info: ../Imagens/012023_mean_shift.png  used on input line 1
-68.
+60.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/012025_mean_shift.png, id=22, 513.92pt x 513.92pt>
 File: ../Imagens/012025_mean_shift.png Graphic file (type png)
 <use ../Imagens/012025_mean_shift.png>
 Package pdftex.def Info: ../Imagens/012025_mean_shift.png  used on input line 1
-74.
+66.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/012023_bin.png, id=23, 513.92pt x 513.92pt>
 File: ../Imagens/012023_bin.png Graphic file (type png)
 <use ../Imagens/012023_bin.png>
-Package pdftex.def Info: ../Imagens/012023_bin.png  used on input line 187.
+Package pdftex.def Info: ../Imagens/012023_bin.png  used on input line 179.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/012025_bin.png, id=24, 513.92pt x 513.92pt>
 File: ../Imagens/012025_bin.png Graphic file (type png)
 <use ../Imagens/012025_bin.png>
-Package pdftex.def Info: ../Imagens/012025_bin.png  used on input line 193.
+Package pdftex.def Info: ../Imagens/012025_bin.png  used on input line 185.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
  [4 <../Imagens/012023.png (PNG copy)> <../Imagens/012025.png (PNG copy)> <../I
 magens/012023_mean_shift.png (PNG copy)> <../Imagens/012025_mean_shift.png (PNG
@@ -357,45 +340,40 @@ magens/012023_mean_shift.png (PNG copy)> <../Imagens/012025_mean_shift.png (PNG
 <../Imagens/012025_sub.png, id=29, 513.92pt x 513.92pt>
 File: ../Imagens/012025_sub.png Graphic file (type png)
 <use ../Imagens/012025_sub.png>
-Package pdftex.def Info: ../Imagens/012025_sub.png  used on input line 206.
+Package pdftex.def Info: ../Imagens/012025_sub.png  used on input line 198.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/resultado01.png, id=30, 513.92pt x 513.92pt>
 File: ../Imagens/resultado01.png Graphic file (type png)
 <use ../Imagens/resultado01.png>
-Package pdftex.def Info: ../Imagens/resultado01.png  used on input line 212.
+Package pdftex.def Info: ../Imagens/resultado01.png  used on input line 204.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/resultado01_mask.png, id=31, 513.92pt x 513.92pt>
 File: ../Imagens/resultado01_mask.png Graphic file (type png)
 <use ../Imagens/resultado01_mask.png>
-Package pdftex.def Info: ../Imagens/resultado01_mask.png  used on input line 22
-5.
+Package pdftex.def Info: ../Imagens/resultado01_mask.png  used on input line 21
+7.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
 <../Imagens/012025_mask.png, id=32, 513.92pt x 513.92pt>
 File: ../Imagens/012025_mask.png Graphic file (type png)
 <use ../Imagens/012025_mask.png>
-Package pdftex.def Info: ../Imagens/012025_mask.png  used on input line 231.
+Package pdftex.def Info: ../Imagens/012025_mask.png  used on input line 223.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
  [5 <../Imagens/012023_bin.png (PNG copy)> <../Imagens/012025_bin.png (PNG copy
 )> <../Imagens/012025_sub.png (PNG copy)> <../Imagens/resultado01.png (PNG copy
 )>] (./relatorio.bbl) [6 <../Imagens/resultado01_mask.png (PNG copy)> <../Image
-ns/012025_mask.png (PNG copy)>] (./relatorio.aux
-
-Package natbib Warning: Citation(s) may have changed.
-(natbib)                Rerun to get citations correct.
-
-)
+ns/012025_mask.png (PNG copy)>] (./relatorio.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 6966 strings out of 478031
- 115970 string characters out of 5840162
+ 6970 strings out of 478031
+ 116024 string characters out of 5840162
  1862330 words of memory out of 5000000
- 27021 multiletter control sequences out of 15000+600000
+ 27025 multiletter control sequences out of 15000+600000
  521736 words of font info for 51 fonts, out of 8000000 for 9000
  16 hyphenation exceptions out of 8191
- 67i,8n,77p,904b,485s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 67i,8n,77p,921b,485s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1000.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm0900.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600p
@@ -406,9 +384,9 @@ k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1440.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1200.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1728.600p
 k>
-Output written on relatorio.pdf (6 pages, 2083823 bytes).
+Output written on relatorio.pdf (6 pages, 2086227 bytes).
 PDF statistics:
- 389 PDF objects out of 1000 (max. 8388607)
+ 395 PDF objects out of 1000 (max. 8388607)
  50 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  51 words of extra memory for PDF output out of 10000 (max. 10000000)

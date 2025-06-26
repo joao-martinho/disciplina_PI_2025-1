@@ -27,71 +27,65 @@
 
 A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato devido à sua geografia montanhosa, rios urbanos e padrões de chuva intensos. A gestão de riscos naturais requer ferramentas que combinem automação, visão computacional e análise de dados geográficos para monitorar o uso do solo e identificar áreas críticas.
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifica alterações na cobertura vegetal de áreas que sofreram desastres naturais.
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um programa que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais.
 
 \section{Fonte dos dados}
 
-A base de imagens foi criada com fotos de satélite da região de Blumenau obtidas no serviço Google Earth, com foco em áreas com grande cobertura vegetal. Para cada área selecionada, tiramos duas fotos, uma do dia 19 de abril de 2023 e outra do dia 17 de abril de 2025, tendo, portanto, quase exatamente dois anos de diferença. As fotos foram tiradas de uma altitude considerada por nós apropriada para a detecção de diferenças na cobertura vegetal.
+A base de imagens foi criada por nós a partir de fotos de satélite da região de Blumenau obtidas no serviço Google Earth, com foco em áreas com grande cobertura vegetal. Para obter fotos do mesmo lugar em datas diferentes, usamos a funcionalidade ``imagens históricas''; para cada área selecionada, tiramos duas fotos, uma do dia 19 de abril de 2023 e outra do dia 17 de abril de 2025, tendo, portanto, quase exatamente dois anos de diferença. As fotos foram tiradas de uma altitude considerada por nós apropriada para a detecção de diferenças na cobertura vegetal e têm, todas elas, tamanho 512x512.
 
 A equipe tomou o devido cuidado para garantir que cada par de fotos tivesse a mesma posição no mapa para que não houvesse diferenças que não aquelas causadas pela passagem do tempo.
 
 \section{O algoritmo}
 
-O nosso programa pode ser dividido em quatro etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
+O nosso programa pode ser dividido em cinco etapas básicas, cada uma consistindo numa técnica de processamento de imagens vista em sala de aula:
 \begin{itemize}
-  \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram altamente precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.). Esta etapa não é indispensável; a binarização sozinha é suficiente para destacar a vegetação em muitos casos, mas a segmentação ajuda a eliminar ruídos e sombras, garantindo assim um resultado mais preciso;
+  \item Segmentação (\texttt{MeanShift.py}): usamos o algoritmo Mean Shift para segmentar a imagem obtida em regiões de cores diferentes, tendo por base o valor médio da intensidade de cada região. Os resultados desta etapa se mostraram precisos para a detecção de cobertura vegetal em áreas urbanas, uma vez que estas têm seu próprio esquema de cores facilmente distinguível de todo o resto (prédios, ruas, água, solo exposto, etc.) O script pergunta ao usuário pelo parâmetro quantil desejado; para os exemplos deste trabalho, usamos sempre 0,1. Esta etapa não é indispensável; a binarização sozinha é suficiente para destacar a vegetação em muitos casos, mas a segmentação ajuda a eliminar ruídos e sombras, garantindo assim um resultado mais preciso;
   \item Binarização (\texttt{Binarizar.py}): esta etapa se mostrou necessária por conta de diferenças que inevitavelmente existem entre duas fotos tiradas por satélite em momentos diferentes, normalmente relacionadas à hora do dia em que são tiradas, à qualidade da câmera usada ou à presença de filtros. Para normalizar o padrão de cores entre imagens, o algoritmo escolhe automaticamente o limiar usado na binarização calculando o nível médio de intensidade da imagem. Observamos que, invariavelmente, as áreas vegetais tornavam-se a parte escura da imagem, e todo o resto a parte clara;
   \item Subtração (\texttt{Subtrair.py}): em seguida, fazemos a subtração das duas imagens, cada uma representando o mesmo lugar em momentos diferentes;
-  \item Erosão e dilatação (\texttt{Abertura.py}): agora, já obtivemos a diferença exata entre as duas imagens, representadas, no resultado da subtração, pelas regiões brancas. No entanto, devido à diferença que tende a existir entre duas imagens quaisquer, é provável que a maioria das regiões brancas representa não mais do que um pequeno acidente de fotografia, como uma sombra. Por isto, decidimos aplicar no final uma combinação de erosão e dilatação usando um elemento estruturante de tamanho 3 (também estudamos outros tamanhos, e o algoritmo pode ser ajustado conforme à necessidade). Desta maneira, regiões brancas insignificantes são eliminadas na erosão e não têm chance de retornar na dilatação, deixando apenas regiões significativas que possuem alto valor semântico para a análise de efeitos dos desastres naturais.
+  \item Erosão e dilatação (\texttt{Abertura.py}): agora, já obtivemos a diferença exata entre as duas imagens, representadas, no resultado da subtração, pelas regiões brancas. No entanto, devido à diferença que tende a existir entre duas imagens quaisquer, é provável que a maioria das regiões brancas represente não mais do que um pequeno acidente de fotografia, como uma sombra. Por isto, decidimos aplicar uma combinação de erosão e dilatação usando um elemento estruturante de tamanho 3 (também estudamos outros tamanhos, e o valor é escolhido no momento da execução do script). Desta maneira, regiões brancas insignificantes são eliminadas na erosão e não têm chance de retornar na dilatação, deixando apenas regiões significativas que possuem alto valor semântico para a análise de efeitos dos desastres naturais;
   \item Aplicação de máscaras (\texttt{AplicarMascara.py}): esta etapa pode ser vista como opcional; seu único propósito é facilitar a leitura do resultado. A partir do resultado da etapa anterior, as regiões brancas são transformadas em máscaras, que são em seguida aplicadas à imagem original para assinalar as regiões de interesse.
 \end{itemize}
 
 \section{Trechos de código}
 
-Conforme mencionado anteriormente, nossa solução é dividida em quatro etapas básicas, que foram escritas cada uma em seu próprio arquivo; desta maneira, pudemos testar cada etapa do algoritmo separadamente. A entrada usada em cada arquivo era a saída gerada pela etapa anterior.
+Conforme mencionado anteriormente, nossa solução é dividida em cinco etapas básicas, que foram escritas cada uma em seu próprio arquivo; desta maneira, pudemos testar cada etapa do algoritmo separadamente. A entrada usada em cada arquivo é a saída gerada pela etapa anterior.
 
-Começando pela parte que, do ponto de vista da codificação, foi a mais delicada, a Mean Shift (alguns trechos de código e linhas em branco foram removidos desta amostra para economizar espaço no documento):
+Começando pela parte que, do ponto de vista da codificação, foi a mais delicada, a Mean Shift (alguns trechos de código e linhas em branco foram removidos desta amostra para poupar espaço no documento):
 
 \subsection{Mean Shift}
 
 \begin{verbatim}
-        array_imagem = np.array(imagem_original)
-        altura, largura = array_imagem.shape[:2]
-        imagem_plana = array_imagem.reshape((-1, 3))
+        imagem = Image.open(caminho_imagem).convert('RGB')
+        array_img = np.array(imagem)
+        array_img = redimensionar_imagem(array_img)
+        img_flat = array_img.reshape(-1, 3)
 
-        largura_banda = estimate_bandwidth(imagem_plana, quantile=quantil, n_samples=amostras)
-        if largura_banda <= 0:
-            largura_banda = 0.1
-
-        print(f"Quantil usado: {quantil}, Largura de banda estimada: {largura_banda:.2f}")
-
+        largura_banda = estimate_bandwidth(img_flat, quantile=quantil, n_samples=amostras)
+        largura_banda = max(largura_banda, 0.1)
         ms = MeanShift(bandwidth=largura_banda, bin_seeding=True)
-        ms.fit(imagem_plana)
+        ms.fit(img_flat)
+
         rotulos = ms.labels_
-        centros_cluster = ms.cluster_centers_
+        centros = ms.cluster_centers_
         num_clusters = len(np.unique(rotulos))
+        print(f"Número de clusters encontrados: {num_clusters}")
 
-        imagem_segmentada = centros_cluster[rotulos].reshape(array_imagem.shape)
-        imagem_segmentada = np.clip(imagem_segmentada, 0, 255).astype(np.uint8)
-
-        imagem_resultante = Image.fromarray(imagem_segmentada)
-        imagem_resultante.save(caminho_saida)
+        img_segmentada = centros[rotulos].reshape(array_img.shape)
+        img_segmentada = np.clip(img_segmentada, 0, 255).astype(np.uint8)
+        Image.fromarray(img_segmentada).save(caminho_saida)
 
         return num_clusters
 \end{verbatim}
 
-O código acima é responsável por transformar a imagem em uma matriz plana de pixels, onde cada linha é um pixel com valores RGB, calcular o parâmetro de largura de banda para o Mean Shift e executar o seu algoritmo de segmentação nos pixels da imagem; cada pixel é atribuído a um cluster baseado em similaridade de cor. Finalmente, cada pixel é substiuído pelo centroide do seu cluster, resultando numa segmentação extremamente precisa e detalhada.
+O código transforma a imagem em uma matriz plana de pixels RGB, estima a largura de banda para o algoritmo Mean Shift e executa a segmentação agrupando pixels com base na similaridade de cor. Cada pixel da imagem é então substituído pelo centroide do seu respectivo cluster, resultando em uma imagem segmentada com regiões homogêneas de cor.
 
 \subsection{Binarização}
 
 \begin{verbatim}
-    imagem = cv2.imread(caminho_imagem, cv2.IMREAD_GRAYSCALE)
-
-    limiar = np.mean(imagem)
-    print(f"Limiar automático calculado: {limiar:.2f}")
-    _, imagem_binarizada = cv2.threshold(imagem, limiar, 255, cv2.THRESH_BINARY)
-    cv2.imwrite(caminho_saida, imagem_binarizada)
-    print(f"Imagem binarizada salva com sucesso em: {caminho_saida}")
+    imagem = carregar_imagem_em_cinza(caminho_imagem)
+    limiar = calcular_limiar_automatico(imagem)
+    binarizada = binarizar_imagem(imagem, limiar)
+    cv2.imwrite(caminho_saida, binarizada)
 \end{verbatim}
 
 O algoritmo de binarização carrega a imagem em escala de cinza, calcula o limiar automaticamente como a média dos valores de intensidade dos pixels e aplica a binarização usando este limiar: pixels acima viram branco (255), abaixo viram preto (0).
@@ -99,43 +93,41 @@ O algoritmo de binarização carrega a imagem em escala de cinza, calcula o limi
 \subsection{Subtração}
 
 \begin{verbatim}
-    imagem_diferenca = cv2.absdiff(imagem_antes, imagem_depois)
-    imagem_diferenca_cinza = cv2.cvtColor(imagem_diferenca, cv2.COLOR_BGR2GRAY)
-    _, imagem_binaria = cv2.threshold(imagem_diferenca_cinza, 50, 255, cv2.THRESH_BINARY)
+    imagem_depois = redimensionar_para_compatibilidade(imagem_antes, imagem_depois)
+    diferenca = cv2.absdiff(imagem_antes, imagem_depois)
 
-    return imagem_diferenca, imagem_binaria
+    return diferenca
 \end{verbatim}
 
-O algoritmo de subtração calcula a diferença absoluta entre as duas imagens.
+O algoritmo calcula a diferença absoluta entre duas imagens, pixel a pixel, resultando em uma nova imagem que destaca as alterações entre elas.
 
 \subsection{Abertura}
 
 \begin{verbatim}
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
-
-    img_filtrada = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
-
-    cv2.imwrite(caminho_saida, img_filtrada)
-    print(f"Imagem filtrada salva em: {caminho_saida} (Kernel = {kernel_size}x{kernel_size})")
+    return cv2.morphologyEx(imagem, cv2.MORPH_OPEN, kernel)
 \end{verbatim}
 
-O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) de tamanho 3 e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
+O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) do tamanho escolhido pelo usuário e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
 
 \subsection{Aplicação de máscaras}
 
 \begin{verbatim}
     resultado = imagem.copy()
+
     for mascara in mascaras:
-        regiao_mascarada = cv2.bitwise_and(imagem, imagem, mask=mascara)
-        hsv = cv2.cvtColor(regiao_mascarada, cv2.COLOR_BGR2HSV)
-        hsv[:,:,1] = 255  # Saturação máxima
-        hsv[:,:,2] = np.where(mascara > 0, 255, hsv[:,:,2])  # Valor máximo nas áreas mascaradas
-        regiao_saturada = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-        resultado = cv2.addWeighted(resultado, 1, regiao_saturada, 0.7, 0)
+        regiao = cv2.bitwise_and(imagem, imagem, mask=mascara)
+        hsv = cv2.cvtColor(regiao, cv2.COLOR_BGR2HSV)
+        hsv[:, :, 1] = 255  # saturação máxima
+        hsv[:, :, 2] = np.where(mascara > 0, 255, hsv[:, :, 2])  # brilho máximo na região
+
+        regiao_realcada = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        resultado = cv2.addWeighted(resultado, 1, regiao_realcada, 0.7, 0)
+
     return resultado
 \end{verbatim}
 
-O algoritmo de aplicação de máscaras retorna uma nova imagem onde as áreas definidas pelas máscaras foram realçadas visualmente, com cores mais saturadas e brilho máximo. As outras regiões permanecem inalteradas.
+O algoritmo aplica máscaras sobre a imagem original, realçando visualmente as regiões mascaradas com aumento da saturação e brilho. As demais regiões da imagem permanecem inalteradas.
 
 \section{Exemplo de resultados}
 
@@ -160,7 +152,7 @@ Para esta demonstração, usaremos duas imagens da região central de Blumenau, 
 
 Como é fácil notar, as imagens possuem diferença significativa no nível de intensidade. Nós atribuímos a causa provável disto à hora do dia e às condições de iluminação natural.
 
-Conforme explicado anteriormente, o próximo passo é a clusterização das imagens usando o algoritmo Mean Shift:
+Conforme explicado anteriormente, o próximo passo é a clusterização das imagens usando o algoritmo Mean Shift com parâmetro quantil de 0,1:
 
 \begin{figure}[H]
     \centering
@@ -198,7 +190,7 @@ Vale notar que a segmentação da imagem de 2023 assinalou muitas pequenas regi�
     \label{binarizada}
 \end{figure}
 
-Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
+Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação com kernel de tamanho 3 para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
 
 \begin{figure}[H]
     \centering
@@ -217,7 +209,7 @@ Finalmente, é o momento de fazer a subtração das duas imagens para apontar di
     \label{resultado}
 \end{figure}
 
-A partir da última figura, podemos observar que a maior área de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
+A partir da última figura, podemos observar que a maior região de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
 
 \begin{figure}[H]
     \centering
@@ -236,7 +228,11 @@ A partir da última figura, podemos observar que a maior área de interesse est�
     \label{máscara}
 \end{figure}
 
-Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente. Observa-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse.
+Gerando e aplicando máscaras a partir da imagem binarizada e aberta, a correspondência das regiões fica mais evidente. Observa-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse. Ao mesmo tempo, as diferenças presentes na malha urbana são assinaladas em azul, e em verde (turquesa) as diferenças de tipos vegetais (florestas em oposição a pastos, por exemplo). Isto, é claro, é um acidente surgido do contraste entre o solo e a máscara, mas pode ser aproveitado para facilitar a interpretação dos resultados.
+
+\section{Conclusão}
+
+O nosso algoritmo mostrou-se eficaz na identificação de alterações na cobertura vegetal; a sua combinação estratégica de técnicas simples do processamento de imagem tem o potencial de ajudar profissionais a analisar os efeitos de desastres naturais.
 
 \nocite{*}
 \bibliographystyle{plain}

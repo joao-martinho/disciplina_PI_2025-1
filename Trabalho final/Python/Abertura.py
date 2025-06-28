@@ -12,6 +12,12 @@ def carregar_imagem_em_cinza(caminho):
     return imagem
 
 
+def binarizar_imagem(imagem):
+    limiar = np.mean(imagem)
+    _, imagem_binarizada = cv2.threshold(imagem, limiar, 255, cv2.THRESH_BINARY)
+    return imagem_binarizada
+
+
 def aplicar_filtro_morfologico(imagem, kernel_size):
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     return cv2.morphologyEx(imagem, cv2.MORPH_OPEN, kernel)
@@ -38,13 +44,14 @@ def solicitar_kernel_size():
 
 
 def main():
-    caminho_entrada = input("Caminho da imagem binária de entrada: ").strip('" ')
+    caminho_entrada = input("Caminho da imagem de entrada: ").strip('" ')
     caminho_saida = input("Caminho para salvar a imagem filtrada: ").strip('" ')
     kernel_size = solicitar_kernel_size()
 
     try:
         imagem = carregar_imagem_em_cinza(caminho_entrada)
-        imagem_filtrada = aplicar_filtro_morfologico(imagem, kernel_size)
+        imagem_binaria = binarizar_imagem(imagem)
+        imagem_filtrada = aplicar_filtro_morfologico(imagem_binaria, kernel_size)
         salvar_imagem(imagem_filtrada, caminho_saida)
 
         print(f"Imagem filtrada salva com sucesso em: {caminho_saida} (Kernel = {kernel_size}x{kernel_size})")

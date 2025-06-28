@@ -37,13 +37,9 @@ A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato 
   \label{Tabela comparativa}
 \end{figure}
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um algoritmo que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais.
+A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um algoritmo que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais. A lógica da separação da vegetação em diferentes níveis de densidade baseada em imagens de momentos diferentes foi inspirada nas técnicas descritas por Nóbrega \textit{et al}. (2023)\cite{artigo01}, que reforçam a eficácia da classificação espectral na identificação de alterações no solo. A estratégia de comparar imagens de diferentes anos com o objetivo de avaliar a perda de cobertura vegetal foi fundamentada nas práticas descritas por Lima \textit{et al}. (2021)\cite{artigo03}, cujo trabalho evidenciou os impactos da urbanização por meio de processamento digital de imagens. O uso de indicadores visuais para medir a cobertura vegetal, como o NDVI abordado por Barros {et al}. (2020)\cite{artigo02}, foi importante para embasar a importância da detecção automática de alterações no solo em áreas urbanas vulneráveis.
 
-A lógica da separação da vegetação em diferentes níveis de densidade baseada em imagens de momentos diferentes foi inspirada nas técnicas descritas por Nóbrega \textit{et al}. (2023)\cite{artigo01}, que reforçam a eficácia da classificação espectral na identificação de alterações no solo.
-
-A estratégia de comparar imagens de diferentes anos com o objetivo de avaliar a perda de cobertura vegetal foi fundamentada nas práticas descritas por Lima \textit{et al}. (2021)\cite{artigo03}, cujo trabalho evidenciou os impactos da urbanização por meio de processamento digital de imagens.
-
-O uso de indicadores visuais para medir a cobertura vegetal, como o NDVI abordado por Barros {et al}. (2020)\cite{artigo02}, foi importante para embasar a importância da detecção automática de alterações no solo em áreas urbanas vulneráveis.
+O primeiro artigo contribui ao demonstrar a regeneração da vegetação na caatinga após o abandono de práticas agrícolas predatórias; o segundo destaca a urbanização insustentável em Teresina, fornecendo dados úteis ao planejamento urbano; e o terceiro evidencia a utilidade do NDVI como ferramenta eficaz para diagnóstico ambiental e apoio à gestão pública. Os métodos empregados, como o uso de Landsat, SPRING, QGIS, classificação supervisionada e NDVI, são consolidados e acessíveis, permitindo análises práticas e comparativas no tempo. No entanto, há limitações: o terceiro artigo não realiza análise temporal, o primeiro depende de dados de campo onerosos e a resolução espacial dos satélites pode ser insuficiente para detalhes em pequenas áreas.
 
 As técnicas de segmentação, binarização, análise multitemporal e classificação supervisionada usadas nos artigos serviram de inspiração direta para o pipeline da nossa solução, especialmente a separação por tonalidade, a subtração temporal e o uso de máscaras para destacar mudanças.
 
@@ -76,20 +72,16 @@ Começando pela parte que, do ponto de vista da codificação, foi a mais delica
         imagem = Image.open(caminho_imagem).convert('RGB')
         array_img = np.array(imagem)
         array_img = redimensionar_imagem(array_img)
-        img_flat = array_img.reshape(-1, 3)
 
-        largura_banda = estimate_bandwidth(img_flat, quantile=quantil, n_samples=amostras)
+        dados = tuple(to_data(array_img))
+
+        largura_banda = estimate_bandwidth(dados, quantile=quantil, n_samples=amostras)
         largura_banda = max(largura_banda, 0.1)
-        ms = MeanShift(bandwidth=largura_banda, bin_seeding=True)
-        ms.fit(img_flat)
 
-        rotulos = ms.labels_
-        centros = ms.cluster_centers_
+        rotulos, centros = mean_shift(dados, largura_banda)
         num_clusters = len(np.unique(rotulos))
-        print(f"Número de clusters encontrados: {num_clusters}")
+        img_segmentada = make_shifted_img(array_img.shape[:2], rotulos, centros)
 
-        img_segmentada = centros[rotulos].reshape(array_img.shape)
-        img_segmentada = np.clip(img_segmentada, 0, 255).astype(np.uint8)
         Image.fromarray(img_segmentada).save(caminho_saida)
 
         return num_clusters
@@ -122,8 +114,10 @@ O algoritmo calcula a diferença absoluta entre duas imagens, pixel a pixel, res
 \subsection{Abertura}
 
 \begin{verbatim}
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    return cv2.morphologyEx(imagem, cv2.MORPH_OPEN, kernel)
+    imagem = carregar_imagem_em_cinza(caminho_entrada)
+    imagem_binaria = binarizar_imagem(imagem)
+    imagem_filtrada = aplicar_filtro_morfologico(imagem_binaria, kernel_size)
+    salvar_imagem(imagem_filtrada, caminho_saida)
 \end{verbatim}
 
 O algoritmo de erosão e dilatação utiliza um elemento estruturante (ou kernel) do tamanho escolhido pelo usuário e aplica a operação de abertura morfológica, erosão seguida de dilatação. Esta operação remove pequenos regiões brancas enquanto mantém as principais, conforme explicado na seção anterior.
@@ -230,10 +224,6 @@ Finalmente, é o momento de fazer a subtração das duas imagens para apontar di
 A partir da última figura, podemos observar que a maior região de interesse está na região norte da imagem. Conferindo nas imagens originais, é possível verificar que houve, entre 2023 e 2025, um aumento significativo na porção de solo exposto naquela região, em prejuízo da cobertura vegetal.
 
 Por motivos de limite no número de páginas do relatório, não mostraremos os resultados da etapa de aplicação de máscaras, mas as imagens serão entregues com o trabalho e podem ser consultadas. Observando-as, verficica-se que o contraste com o fundo marrom do solo exposto, somado ao efeito de transparência da máscara, lhe confere um tom vermelho, o que também serve para indicar a principal região de interesse. Ao mesmo tempo, as diferenças presentes na malha urbana são assinaladas em azul, e em verde (turquesa) as diferenças de tipos vegetais (florestas em oposição a pastos, por exemplo). Isto, é claro, é um acidente surgido do contraste entre o solo e a máscara, mas pode ser aproveitado para facilitar a interpretação dos resultados.
-
-\section{Conclusão}
-
-O nosso algoritmo mostrou-se eficaz na identificação de alterações na cobertura vegetal; a sua combinação estratégica de técnicas simples do processamento de imagem tem o potencial de ajudar profissionais a analisar os efeitos de desastres naturais.
 
 \bibliographystyle{plain}
 \bibliography{referencias}

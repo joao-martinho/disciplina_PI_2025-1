@@ -37,11 +37,7 @@ A cidade de Blumenau é historicamente vulnerável a enchentes, sendo este fato 
   \label{Tabela comparativa}
 \end{figure}
 
-A partir dos artigos escolhidos para servir de base para o nosso trabalho, o problema a ser resolvido é a criação de um algoritmo que detecte padrões e características do terreno em fotos tiradas por satélites, e, usando técnicas de processamento de imagem, identifique alterações na cobertura vegetal de áreas que sofreram desastres naturais. A lógica da separação da vegetação em diferentes níveis de densidade baseada em imagens de momentos diferentes foi inspirada nas técnicas descritas por Nóbrega \textit{et al}. (2023)\cite{artigo01}, que reforçam a eficácia da classificação espectral na identificação de alterações no solo. A estratégia de comparar imagens de diferentes anos com o objetivo de avaliar a perda de cobertura vegetal foi fundamentada nas práticas descritas por Lima \textit{et al}. (2021)\cite{artigo03}, cujo trabalho evidenciou os impactos da urbanização por meio de processamento digital de imagens. O uso de indicadores visuais para medir a cobertura vegetal, como o NDVI abordado por Barros {et al}. (2020)\cite{artigo02}, foi importante para embasar a importância da detecção automática de alterações no solo em áreas urbanas vulneráveis.
-
-O primeiro artigo contribui ao demonstrar a regeneração da vegetação na caatinga após o abandono de práticas agrícolas predatórias; o segundo destaca a urbanização insustentável em Teresina, fornecendo dados úteis ao planejamento urbano; e o terceiro evidencia a utilidade do NDVI como ferramenta eficaz para diagnóstico ambiental e apoio à gestão pública. Os métodos empregados, como o uso de Landsat, SPRING, QGIS, classificação supervisionada e NDVI, são consolidados e acessíveis, permitindo análises práticas e comparativas no tempo. No entanto, há limitações: o terceiro artigo não realiza análise temporal, o primeiro depende de dados de campo onerosos e a resolução espacial dos satélites pode ser insuficiente para detalhes em pequenas áreas.
-
-As técnicas de segmentação, binarização, análise multitemporal e classificação supervisionada usadas nos artigos serviram de inspiração direta para o pipeline da nossa solução, especialmente a separação por tonalidade, a subtração temporal e o uso de máscaras para destacar mudanças.
+A partir dos artigos selecionados, o problema abordado é o desenvolvimento de um algoritmo capaz de identificar padrões e alterações na cobertura vegetal em imagens de satélite, especialmente em áreas afetadas por desastres naturais. A ideia de classificar a vegetação por densidade e comparar imagens de diferentes períodos foi inspirada em Nóbrega \textit{et al.} (2023)\cite{artigo01} e Lima \textit{et al.} (2021)\cite{artigo03}, que destacam a eficácia da classificação espectral e do processamento multitemporal. O uso do NDVI, como apresentado por Barros \textit{et al.} (2020)\cite{artigo02}, fundamenta a importância da detecção automática em áreas urbanas vulneráveis. Os três artigos utilizam imagens Landsat e geotecnologias para analisar mudanças ambientais provocadas por ações humanas, com variações nos objetivos, métodos e escalas. Enquanto dois estudos\cite{artigo01, artigo03} aplicam classificação supervisionada, o outro\cite{artigo02} se baseia diretamente no NDVI. As contribuições vão desde a regeneração da caatinga\cite{artigo01}, passando pela urbanização desordenada de Teresina\cite{artigo03}, até a aplicação do NDVI no apoio à gestão ambiental\cite{artigo02}. As técnicas como segmentação, binarização e análise multitemporal inspiraram diretamente a lógica do nosso pipeline.
 
 \section{Fonte dos dados}
 
@@ -68,6 +64,7 @@ Começando pela parte que, do ponto de vista da codificação, foi a mais delica
 
 \subsection{Mean Shift}
 
+{\small}
 \begin{verbatim}
         imagem = Image.open(caminho_imagem).convert('RGB')
         array_img = np.array(imagem)

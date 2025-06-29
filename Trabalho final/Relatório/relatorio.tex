@@ -199,7 +199,7 @@ Vale notar que a segmentação da imagem de 2023 assinalou muitas pequenas regi�
     \label{binarizada}
 \end{figure}
 
-Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação com kernel de tamanho 3 para eliminar diferenças consideradas insignificantes. Abaixo o resultado:
+Finalmente, é o momento de fazer a subtração das duas imagens para apontar diferenças na cobertura vegetal entre estes dois anos. Como explicado anteriormente, há a presença de muitas pequenas regiões claras no resultado, o que por sua vez resulta em parte da diferença de intensidade entre as duas imagens e noutra parte de fatores não naturais (corte intencional de árvores, por exemplo). Por este motivo, aplicamos o algoritmo de erosão e dilatação com kernel de tamanho 3 para eliminar diferenças consideradas insignificantes:
 
 \begin{figure}[H]
     \centering

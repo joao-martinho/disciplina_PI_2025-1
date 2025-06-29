@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2025.6.24)  28 JUN 2025 15:51
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2025.6.24)  29 JUN 2025 13:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -281,94 +281,102 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 24.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 24.
-<../tabela.png, id=1, 826.58812pt x 463.7325pt>
-File: ../tabela.png Graphic file (type png)
-<use ../tabela.png>
-Package pdftex.def Info: ../tabela.png  used on input line 35.
-(pdftex.def)             Requested size: 386.95894pt x 217.09102pt.
 
-[1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <../tabela.png (PNG copy)>]
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 5
-2.
- (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
+LaTeX Warning: File `../tabela.png' not found on input line 35.
+
+
+! Package pdftex.def Error: File `../tabela.png' not found: using draft setting
+.
+
+See the pdftex.def package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.35 ...aphics[width=0.8\textwidth]{../tabela.png}
+                                                  
+? 
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 3
+5.
+(/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2022/07/10 v2.5l Standard LaTeX font definitions
-) [2] [3]
-<../Imagens/012023.png, id=21, 385.44pt x 385.44pt>
+) [1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4]
+<../Imagens/012023.png, id=23, 385.44pt x 385.44pt>
 File: ../Imagens/012023.png Graphic file (type png)
 <use ../Imagens/012023.png>
 Package pdftex.def Info: ../Imagens/012023.png  used on input line 148.
 (pdftex.def)             Requested size: 232.17241pt x 232.17151pt.
-<../Imagens/012025.png, id=22, 385.44pt x 385.44pt>
+<../Imagens/012025.png, id=24, 385.44pt x 385.44pt>
 File: ../Imagens/012025.png Graphic file (type png)
 <use ../Imagens/012025.png>
 Package pdftex.def Info: ../Imagens/012025.png  used on input line 154.
 (pdftex.def)             Requested size: 232.17241pt x 232.17151pt.
-<../Imagens/012023_mean_shift.png, id=23, 513.92pt x 513.92pt>
+<../Imagens/012023_mean_shift.png, id=25, 513.92pt x 513.92pt>
 File: ../Imagens/012023_mean_shift.png Graphic file (type png)
 <use ../Imagens/012023_mean_shift.png>
 Package pdftex.def Info: ../Imagens/012023_mean_shift.png  used on input line 1
 69.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
-<../Imagens/012025_mean_shift.png, id=24, 513.92pt x 513.92pt>
+<../Imagens/012025_mean_shift.png, id=26, 513.92pt x 513.92pt>
 File: ../Imagens/012025_mean_shift.png Graphic file (type png)
 <use ../Imagens/012025_mean_shift.png>
 Package pdftex.def Info: ../Imagens/012025_mean_shift.png  used on input line 1
 75.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
- [4 <../Imagens/012023.png (PNG copy)> <../Imagens/012025.png (PNG copy)>]
-<../Imagens/012023_bin.png, id=29, 513.92pt x 513.92pt>
+ [5 <../Imagens/012023.png (PNG copy)> <../Imagens/012025.png (PNG copy)>]
+<../Imagens/012023_bin.png, id=31, 513.92pt x 513.92pt>
 File: ../Imagens/012023_bin.png Graphic file (type png)
 <use ../Imagens/012023_bin.png>
 Package pdftex.def Info: ../Imagens/012023_bin.png  used on input line 188.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
-<../Imagens/012025_bin.png, id=30, 513.92pt x 513.92pt>
+<../Imagens/012025_bin.png, id=32, 513.92pt x 513.92pt>
 File: ../Imagens/012025_bin.png Graphic file (type png)
 <use ../Imagens/012025_bin.png>
 Package pdftex.def Info: ../Imagens/012025_bin.png  used on input line 194.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
-<../Imagens/012025_sub.png, id=31, 513.92pt x 513.92pt>
+<../Imagens/012025_sub.png, id=33, 513.92pt x 513.92pt>
 File: ../Imagens/012025_sub.png Graphic file (type png)
 <use ../Imagens/012025_sub.png>
 Package pdftex.def Info: ../Imagens/012025_sub.png  used on input line 207.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
-<../Imagens/resultado01.png, id=32, 513.92pt x 513.92pt>
+<../Imagens/resultado01.png, id=34, 513.92pt x 513.92pt>
 File: ../Imagens/resultado01.png Graphic file (type png)
 <use ../Imagens/resultado01.png>
 Package pdftex.def Info: ../Imagens/resultado01.png  used on input line 213.
 (pdftex.def)             Requested size: 232.17241pt x 232.1715pt.
- [5 <../Imagens/012023_mean_shift.png (PNG copy)> <../Imagens/012025_mean_shift
+ [6 <../Imagens/012023_mean_shift.png (PNG copy)> <../Imagens/012025_mean_shift
 .png (PNG copy)> <../Imagens/012023_bin.png (PNG copy)> <../Imagens/012025_bin.
-png (PNG copy)>]
-(./relatorio.bbl) [6 <../Imagens/012025_sub.png (PNG copy)> <../Imagens/resulta
-do01.png (PNG copy)>] (./relatorio.aux)
+png (PNG copy)>] (./relatorio.bbl)
+[7 <../Imagens/012025_sub.png (PNG copy)> <../Imagens/resultado01.png (PNG copy
+)>] (./relatorio.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 6964 strings out of 478031
- 115717 string characters out of 5840162
+ 7001 strings out of 478031
+ 116362 string characters out of 5840162
  1861330 words of memory out of 5000000
- 27019 multiletter control sequences out of 15000+600000
+ 27043 multiletter control sequences out of 15000+600000
  521736 words of font info for 51 fonts, out of 8000000 for 9000
  16 hyphenation exceptions out of 8191
  67i,8n,77p,1389b,478s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm0900.600p
-k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1000.600p
+k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1000.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1440.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1200.600p
 k> </home/joao/.texlive2022/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1728.600p
 k>
-Output written on relatorio.pdf (6 pages, 1684215 bytes).
+Output written on relatorio.pdf (7 pages, 1462781 bytes).
 PDF statistics:
- 378 PDF objects out of 1000 (max. 8388607)
- 50 compressed objects within 1 object stream
+ 383 PDF objects out of 1000 (max. 8388607)
+ 54 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 46 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
